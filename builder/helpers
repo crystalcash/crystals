@@ -2,6 +2,7 @@
 
 BUILDER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NERVA_DIR=$(dirname $BUILDER_DIR)
+source ${BUILDER_DIR}/env
 
 function detectos()
 {
@@ -60,13 +61,7 @@ function detectversion()
 	name=$(awk '/#define DEF_MONERO_RELEASE_NAME /{ print $3 }' < ${NERVA_DIR}/src/version.cpp.in)
     export NERVA_VERSION=$(echo ${ver} | tr -d '"')
 	export NERVA_CODENAME=$(echo ${name} | tr -d '"')
-    echo NERVA version detected as ${NERVA_VERSION}: ${NERVA_CODENAME}
-}
-
-function clean()
-{
-	cd ${BUILDER_DIR}
-	rm -rf ${BUILDER_DIR}/build
+    echo Version detected as ${REPO_NAME_FULL} ${NERVA_VERSION}: ${NERVA_CODENAME}
 }
 
 function buildstaticlibcurl()
