@@ -377,7 +377,9 @@ namespace nodetool
     std::set<std::string> full_addrs;
 
     if (nettype == cryptonote::TESTNET)
-      full_addrs = ::config::testnet::seed_nodes;
+    {
+      // TODO-TK: address this
+    }
     else if (nettype == cryptonote::STAGENET)
     {
       // TODO-TK: address this

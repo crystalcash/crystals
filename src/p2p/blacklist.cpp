@@ -44,8 +44,7 @@ namespace blacklist
 
     void read_blacklist_from_url(const bool testnet)
     {
-        std::set<std::string> seed_nodes = testnet ? 
-            ::config::testnet::seed_nodes : ::config::seed_nodes;
+        std::set<std::string> seed_nodes = ::config::seed_nodes;
 
         for (const std::string &ip : seed_nodes)
         {

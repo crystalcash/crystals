@@ -893,7 +893,7 @@ namespace cryptonote
     }
 
     j = 0;
-    uint32_t sp_size = (1 << 20) - 1;
+    uint32_t sp_size = (256 * 1024) - 1;
     for (int i = 0; i < 128; i += 8)
     {
       r->operators[j] = (cn_bytes[i + 1] ^ cn_bytes[i + 3]) >> 5;
@@ -955,15 +955,13 @@ namespace cryptonote
 
     uint64_t ht = 1;
 
-    if (b.major_version >= 8)
-      ht = height - 256;
-    else if (b.major_version >= 7)
-      ht = height - 1;
+    if (b.major_version >= 7)
+      ht = height - CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
+
+    int cn_iters = 0x10000 + ((height + 1) % 64);
 
     if (b.major_version >= 7)
     {
-      int cn_iters = 0x40000 + ((height + 1) % 64);
-
       if (height != cached_height || !v2_initialized)
       {
           cached_height = height;
@@ -982,9 +980,7 @@ namespace cryptonote
     }
     else
     {
-      int cn_variant = b.major_version >= 5 ? 1 : 0;
-      int cn_iters = (b.major_version >= 6 ? 0x40000 : 0x80000) + ((height + 1) % 1024);
-      crypto::cn_slow_hash(bd.data(), bd.size(), res, cn_variant, cn_iters, NULL, NULL);
+      crypto::cn_slow_hash(bd.data(), bd.size(), res, 1, cn_iters, NULL, NULL);
     }
 
     return true;

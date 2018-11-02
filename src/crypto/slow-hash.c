@@ -43,7 +43,7 @@
 #include "hash-ops.h"
 #include "oaes_lib.h"
 
-#define MEMORY         (1 << 20) // 1MB scratchpad
+#define MEMORY         (256 * 1024) // 256kb scratchpad
 #define AES_BLOCK_SIZE  16
 #define AES_KEY_SIZE    32
 #define INIT_SIZE_BLK   8

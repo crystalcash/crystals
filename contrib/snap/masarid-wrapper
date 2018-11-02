@@ -2,7 +2,7 @@
 
 if [ ! -d "$SNAP_USER_DATA/etc" ]; then
   mkdir $SNAP_USER_DATA/etc/
-  cp -R $SNAP/etc/nervad.conf $SNAP_USER_DATA/etc/nervad.conf
+  cp -R $SNAP/etc/slutoshid.conf $SNAP_USER_DATA/etc/slutoshid.conf
 fi
 
-exec "$SNAP/bin/nervad" "$@"
+exec "$SNAP/bin/slutoshid" "$@"
