@@ -113,5 +113,5 @@ target_link_libraries(daemon
     ${EXTRA_LIBRARIES})
 set_property(TARGET daemon
   PROPERTY
-    OUTPUT_NAME "ncashd")
+    OUTPUT_NAME "slated")
 install(TARGETS daemon DESTINATION bin)

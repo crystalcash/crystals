@@ -10289,7 +10289,7 @@ std::string wallet2::make_uri(const std::string &address, const std::string &pay
     }
   }
 
-  std::string uri = "ncash:" + address;
+  std::string uri = "slate:" + address;
   unsigned int n_fields = 0;
 
   if (!payment_id.empty())
@@ -10318,9 +10318,9 @@ std::string wallet2::make_uri(const std::string &address, const std::string &pay
 //----------------------------------------------------------------------------------------------------
 bool wallet2::parse_uri(const std::string &uri, std::string &address, std::string &payment_id, uint64_t &amount, std::string &tx_description, std::string &recipient_name, std::vector<std::string> &unknown_parameters, std::string &error)
 {
-  if (uri.substr(0, 5) != "ncash:")
+  if (uri.substr(0, 5) != "slate:")
   {
-    error = std::string("URI has wrong scheme (expected \"ncash:\"): ") + uri;
+    error = std::string("URI has wrong scheme (expected \"slate:\"): ") + uri;
     return false;
   }
 

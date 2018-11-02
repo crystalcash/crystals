@@ -62,5 +62,5 @@ target_link_libraries(simplewallet
     ${EXTRA_LIBRARIES})
 set_property(TARGET simplewallet
   PROPERTY
-    OUTPUT_NAME "ncash-wallet-cli")
+    OUTPUT_NAME "slate-wallet-cli")
 install(TARGETS simplewallet DESTINATION bin)
