@@ -73,11 +73,13 @@ lscript=${BUILDER_DIR}/build/release/bin/install
 
 #Construct installer script
 echo "#!/bin/bash" > $lscript
-echo "dir=\"$(cd \"\$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"" >> $lscript
+echo "dir=\"\$(cd \"\$(dirname \"\${BASH_SOURCE[0]}\")\" && pwd)\"" >> $lscript
+echo "REPO_NAME="${REPO_NAME} >> $lscript
+echo "REPO_NAME_FULL="${REPO_NAME_FULL} >> $lscript
 echo "function $(declare -f install)" >> $lscript
 echo "install" >> $lscript
 chmod +x $lscript
 
-zip -rj ${NERVA_DIR}/${REPO_NAME}-v${ERVA_VERSION}_osx-x64.zip ${BUILDER_DIR}/build/release/bin/*
+zip -rj ${NERVA_DIR}/${REPO_NAME}-v${NERVA_VERSION}_osx-x64.zip ${BUILDER_DIR}/build/release/bin/*
 
 clean

@@ -22,7 +22,7 @@ function install()
 	bdir=$(realpath ~/.local/bin)
 	sdir=$(realpath ~/.local/share)
 
-	dfile=${sdir}/applications/nervad.desktop
+	dfile=${sdir}/applications/${REPO_NAME}d.desktop
 
 	#Construct daemon .desktop file
 	echo "[Desktop Entry]" > $dfile
@@ -34,7 +34,7 @@ function install()
 
 	chmod +x $dfile
 
-	wfile=${sdir}/applications/nerva-wallet-cli.desktop
+	wfile=${sdir}/applications/${REPO_NAME}-wallet-cli.desktop
 
 	#Construct wallet .desktop file
 	echo "[Desktop Entry]" > $wfile
@@ -42,11 +42,11 @@ function install()
 	echo "Exec=${REPO_NAME}-wallet-cli" >> $wfile
 	echo "Terminal=true" >> $wfile
 	echo "Type=Application" >> $wfile
-	echo "Icon=${bdir}/nerva-logo-black.png" >> $wfile
+	echo "Icon=${bdir}/${REPO_NAME}-logo-black.png" >> $wfile
 
 	chmod +x $wfile
 
-	ufile=${bdir}/nerva-uninstall
+	ufile=${bdir}/${REPO_NAME}-uninstall
 
 	#Construct installer script
 	echo "#!/bin/bash" > $ufile
