@@ -23,11 +23,11 @@ cd ${BUILDER_DIR}/build/release
 cmake -D CMAKE_BUILD_TYPE=release -D STATIC=ON -D BUILD_TAG=linux-x64 ../../..
 make -j4
 
-lscript=${BUILDER_DIR}/build/$1/bin/install
+lscript=${BUILDER_DIR}/build/release/bin/install
 
 #Construct installer script
 echo "#!/bin/bash" > $lscript
-echo "dir=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"" >> $lscript
+echo "dir=\"$(cd \"\$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"" >> $lscript
 echo "function $(declare -f install)" >> $lscript
 echo "install" >> $lscript
 chmod +x $lscript

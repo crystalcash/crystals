@@ -18,7 +18,7 @@ function installdeps()
 
 function install()
 {
-	cp ${dir}/nerva* ~/.local/bin
+	cp ${dir}/${REPO_NAME}* ~/.local/bin
 	bdir=$(realpath ~/.local/bin)
 	sdir=$(realpath ~/.local/share)
 
