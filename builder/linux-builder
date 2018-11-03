@@ -11,11 +11,6 @@ source ${BUILDER_DIR}/linux-helpers
 
 detectversion
 detectos
-installdeps
-
-if [ ! -f "/usr/local/lib/libcurl.a" ]; then
-	buildstaticlibcurl
-fi
 
 mkdir -p ${BUILDER_DIR}/build/release
 

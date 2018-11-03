@@ -50,7 +50,7 @@ function install()
 
 	#Construct installer script
 	echo "#!/bin/bash" > $ufile
-	echo "rm ${bdir}/${REPO_NAME}" >> $ufile
+	echo "rm ${bdir}/${REPO_NAME}d" >> $ufile
 	echo "rm ${bdir}/${REPO_NAME}-wallet-cli" >> $ufile
 	echo "rm ${bdir}/${REPO_NAME}-wallet-rpc" >> $ufile
 	echo "rm ${bdir}/${REPO_NAME}-blockchain-*" >> $ufile

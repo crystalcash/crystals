@@ -1,4 +1,4 @@
-# NERVA
+# Slate
 
 Copyright (c) 2018 The NERVA Project.
 
@@ -19,7 +19,9 @@ Discord is the preferred method of communication for NERVA
 
 [Discord](https://discord.gg/jsdbEns)
 
-## Compiling NERVA from source
+## Compiling Slate from source
+
+Slate is an official testing fork of NERVA. You can therefore apply the same build process to both coins.
 
 [Building the NERVA CLI tools](https://bitbucket.org/snippets/nerva-project/kejLB4/building-the-nerva-cli-tools): To build and run the CLI tools
 

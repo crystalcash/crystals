@@ -402,8 +402,8 @@ namespace cryptonote
       if (boost::filesystem::exists(old_files / "blockchain.bin"))
       {
         MWARNING("Found old-style blockchain.bin in " << old_files.string());
-        MWARNING("NERVA now uses a new format. You can either remove blockchain.bin to start syncing");
-        MWARNING("the blockchain anew, or use nerva-blockchain-export and nerva-blockchain-import to");
+        MWARNING("Slate now uses a new format. You can either remove blockchain.bin to start syncing");
+        MWARNING("the blockchain anew, or use slate-blockchain-export and slate-blockchain-import to");
         MWARNING("convert your existing blockchain.bin to the new format. See README.md for instructions.");
         return false;
       }
@@ -1405,7 +1405,7 @@ namespace cryptonote
     {
       std::string main_message;
       if (m_offline)
-        main_message = "The daemon is running offline and will not attempt to sync to the NERVA network.";
+        main_message = "The daemon is running offline and will not attempt to sync to the Slate network.";
       else
         main_message = "The daemon will start synchronizing with the network. This may take a long time to complete.";
       MGINFO_YELLOW(ENDL << "**********************************************************************" << ENDL
