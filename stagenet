@@ -27,25 +27,25 @@ function createwallets()
 function start1()
 {
 	${nd} --stagenet --no-igd --hide-my-port --data-dir "${datadir}/node1" --p2p-bind-port 28080 --rpc-bind-port 28081 --zmq-rpc-bind-port 28082 --rpc-restricted-bind-port 28083 \
-	--add-exclusive-node 127.0.0.1:38080 --add-exclusive-node 127.0.0.1:48080 --add-exclusive-node 127.0.0.1:58080 $1
+	--add-exclusive-node 127.0.0.1:38080 --add-exclusive-node 127.0.0.1:48080 --add-exclusive-node 127.0.0.1:58080 --block-sync-size 1 $1
 }
 
 function start2()
 {
 	${nd} --stagenet --no-igd --hide-my-port --data-dir "${datadir}/node2" --p2p-bind-port 38080 --rpc-bind-port 38081 --zmq-rpc-bind-port 38082 --rpc-restricted-bind-port 38083 \
-	--add-exclusive-node 127.0.0.1:28080 --add-exclusive-node 127.0.0.1:48080 --add-exclusive-node 127.0.0.1:58080 $1
+	--add-exclusive-node 127.0.0.1:28080 --add-exclusive-node 127.0.0.1:48080 --add-exclusive-node 127.0.0.1:58080 --block-sync-size 1 $1
 }
 
 function start3()
 {
 	${nd} --stagenet --no-igd --hide-my-port --data-dir "${datadir}/node3" --p2p-bind-port 48080 --rpc-bind-port 48081 --zmq-rpc-bind-port 48082 --rpc-restricted-bind-port 48083 \
-	--add-exclusive-node 127.0.0.1:28080 --add-exclusive-node 127.0.0.1:38080 --add-exclusive-node 127.0.0.1:58080 $1
+	--add-exclusive-node 127.0.0.1:28080 --add-exclusive-node 127.0.0.1:38080 --add-exclusive-node 127.0.0.1:58080 --block-sync-size 1 $1
 }
 
 function start4()
 {
 	${nd} --stagenet --no-igd --hide-my-port --data-dir "${datadir}/node4" --p2p-bind-port 58080 --rpc-bind-port 58081 --zmq-rpc-bind-port 58082 --rpc-restricted-bind-port 58083 \
-	--add-exclusive-node 127.0.0.1:28080 --add-exclusive-node 127.0.0.1:38080 --add-exclusive-node 127.0.0.1:48080 \
+	--add-exclusive-node 127.0.0.1:28080 --add-exclusive-node 127.0.0.1:38080 --add-exclusive-node 127.0.0.1:48080 --block-sync-size 1 \
 	--start-mining NV1tXu3czVbaBWYcKg28X4P2mHrJZMnS8R3TshtYgJVrfA9XLrKRKzVcjaPLgjNiwzH3DNTeywRTURDJUY59a5Lb2vWSG9s5q --mining-threads 2
 }
 

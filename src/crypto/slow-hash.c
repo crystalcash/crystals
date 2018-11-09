@@ -1388,7 +1388,12 @@ void randomize_scratchpad(random_values *r, const char* salt, uint8_t* scratchpa
     if (variant <= 1)
         return;
 
-    if (variant >= 3)
+    if (variant >= 4)
+    {
+        for (uint32_t i = 0; i < MEMORY; i ++)
+            scratchpad[i] = scratchpad[i] ^ salt[i];
+    }
+    else if (variant >= 3)
     {
         uint32_t step = MEMORY / (32 * 128);
         uint32_t x = 0;

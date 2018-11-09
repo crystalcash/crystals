@@ -933,10 +933,10 @@ namespace cryptonote
 
   static const bool debug_write_override = false;
 
-  void generate_v3_data(char* v3_salt, uint32_t nonce, uint32_t height, bool debug_write, const cryptonote::Blockchain* bc)
+  void generate_v3_data(char* v3_salt, uint32_t nonce, uint32_t height, bool debug_write, const int variant, const cryptonote::Blockchain* bc)
   {
     uint32_t seed = nonce ^ height;
-    bc->get_db().get_v3_data(v3_salt, height, seed);
+    bc->get_db().get_v3_data(v3_salt, height, variant, seed);
 
     if (debug_write && debug_write_override)
     {
@@ -972,10 +972,17 @@ namespace cryptonote
         CRITICAL_REGION_END();
       }
 
-      if (b.major_version >= 9)
+      if (b.major_version >= 10)
+      {
+        char* v3_salt = (char*)malloc(1024 * 256);
+        generate_v3_data(v3_salt, b.nonce, (uint32_t)ht, write_v3_data, 4, bc);
+        crypto::cn_slow_hash(bd.data(), bd.size(), res, 4, cn_iters, r, v3_salt);
+        free(v3_salt);
+      }
+      else if (b.major_version >= 9)
       {
         char* v3_salt = (char*)malloc(128 * 32);
-        generate_v3_data(v3_salt, b.nonce, (uint32_t)ht, write_v3_data, bc);
+        generate_v3_data(v3_salt, b.nonce, (uint32_t)ht, write_v3_data, 3, bc);
         crypto::cn_slow_hash(bd.data(), bd.size(), res, 3, cn_iters, r, v3_salt);
         free(v3_salt);
       }

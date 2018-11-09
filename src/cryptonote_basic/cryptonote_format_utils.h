@@ -107,7 +107,7 @@ namespace cryptonote
   bool calculate_block_hash(const block& b, crypto::hash& res);
   bool get_block_hash(const block& b, crypto::hash& res);
   crypto::hash get_block_hash(const block& b);
-  void generate_v3_data(char* v3_salt, uint32_t nonce, uint32_t height, bool debug_write, const cryptonote::Blockchain* bc);
+  void generate_v3_data(char* v3_salt, uint32_t nonce, uint32_t height, bool debug_write, const int variant, const cryptonote::Blockchain* bc);
   bool get_block_longhash(const block& b, crypto::hash& res, uint64_t height, bool write_v3_data, const cryptonote::Blockchain* bc);
   crypto::hash get_block_longhash(const block& b, uint64_t height, bool write_v3_data, const cryptonote::Blockchain* bc);
   bool parse_and_validate_block_from_blob(const blobdata& b_blob, block& b);
