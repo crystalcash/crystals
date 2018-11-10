@@ -946,13 +946,8 @@ namespace cryptonote
     crypto::hash h;
     get_blob_hash(bd, h);
 
-    //std::cout << h << std::endl;
-    //std::cout << seed << std::endl;
-    
     for (int i = 0; i < 32; i += 4)
       seed ^= *(uint32_t*)&h.data[i];
-
-    //std::cout << seed << std::endl;
 
     bc->get_db().get_v3_data(salt, height, 4, seed);
   }
