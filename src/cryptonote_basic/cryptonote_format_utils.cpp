@@ -933,22 +933,28 @@ namespace cryptonote
 
   static const bool debug_write_override = false;
 
-  void generate_v3_data(char* v3_salt, uint32_t nonce, uint32_t height, bool debug_write, const int variant, const cryptonote::Blockchain* bc)
+  void generate_v3_data(char* salt, uint32_t nonce, uint32_t height, const cryptonote::Blockchain* bc)
   {
     uint32_t seed = nonce ^ height;
-    bc->get_db().get_v3_data(v3_salt, height, variant, seed);
+    bc->get_db().get_v3_data(salt, height, 3, seed);
+  }
 
-    if (debug_write && debug_write_override)
-    {
-      std::cout << "==============================================" << std::endl;
-      std::cout << nonce << std::endl;
-      std::cout << height << std::endl;
-      std::cout << byte_2_str(&v3_salt[0], 32) << std::endl;
-      std::cout << byte_2_str(&v3_salt[32], 32) << std::endl;
-      std::cout << byte_2_str(&v3_salt[64], 32) << std::endl;
-      std::cout << byte_2_str(&v3_salt[96], 32) << std::endl;
-      std::cout << "----------------------------------------------" << std::endl;
-    }
+  void generate_v4_data(blobdata bd, char* salt, uint32_t nonce, uint32_t height, const cryptonote::Blockchain* bc)
+  {
+    uint32_t seed = nonce ^ height;
+
+    crypto::hash h;
+    get_blob_hash(bd, h);
+
+    //std::cout << h << std::endl;
+    //std::cout << seed << std::endl;
+    
+    for (int i = 0; i < 32; i += 4)
+      seed ^= *(uint32_t*)&h.data[i];
+
+    //std::cout << seed << std::endl;
+
+    bc->get_db().get_v3_data(salt, height, 4, seed);
   }
 
   bool get_block_longhash(const block& b, crypto::hash& res, uint64_t height, bool write_v3_data, const cryptonote::Blockchain* bc)
@@ -974,17 +980,17 @@ namespace cryptonote
 
       if (b.major_version >= 10)
       {
-        char* v3_salt = (char*)malloc(1024 * 256);
-        generate_v3_data(v3_salt, b.nonce, (uint32_t)ht, write_v3_data, 4, bc);
-        crypto::cn_slow_hash(bd.data(), bd.size(), res, 4, cn_iters, r, v3_salt);
-        free(v3_salt);
+        char* salt = (char*)malloc(1024 * 256);
+        generate_v4_data(bd, salt, b.nonce, (uint32_t)ht, bc);
+        crypto::cn_slow_hash(bd.data(), bd.size(), res, 4, cn_iters, r, salt);
+        free(salt);
       }
       else if (b.major_version >= 9)
       {
-        char* v3_salt = (char*)malloc(128 * 32);
-        generate_v3_data(v3_salt, b.nonce, (uint32_t)ht, write_v3_data, 3, bc);
-        crypto::cn_slow_hash(bd.data(), bd.size(), res, 3, cn_iters, r, v3_salt);
-        free(v3_salt);
+        char* salt = (char*)malloc(128 * 32);
+        generate_v3_data(salt, b.nonce, (uint32_t)ht, bc);
+        crypto::cn_slow_hash(bd.data(), bd.size(), res, 3, cn_iters, r, salt);
+        free(salt);
       }
       else
         crypto::cn_slow_hash(bd.data(), bd.size(), res, 2, cn_iters, r, NULL);
