@@ -2,14 +2,14 @@
 
 dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-bindir=${dir}/build/$1/bin
+bindir=${dir}/builder/build/$1/bin
 
-nd=${bindir}/nervad
-nw=${bindir}/nerva-wallet-cli
-datadir=$(realpath ~/.nerva/stagenet)
+nd=${bindir}/slated
+nw=${bindir}/slate-wallet-cli
+datadir=$(realpath ~/.slate/stagenet)
 
-addressA="NV1uKzZ6tjA6xhJ5zKRu2TGpvNvsmznNZgnJuhwHRv1jKzoCABvtDUgBdguJxWq1TSjDg9ge9zZ2c5r2CQZ4LTQD1dxntAmGW"
-addressB="NV3QRL7PwFZWs6Xw9ERf4E5GgjCZgRf3JNmCvyXAV2GAKpKHMmDK8cPTwBqwQjVLMA2G9M5iwh3AJM1e4LzWjuXH2UngCq4hV"
+addressA="SL2FeC93PLC7qpGPFcg89o7RCDGdF8KGC2ZHzGziwq2SR51AxRnV8sqLrLAupQftSPMn7DAKxENpsdzJE8nJ6igi31Yp2BeKg"
+addressB="SL43RuixTGe2DvWwtfjhAt2cv3VMM19is7mKNikfhnsrBdmbBqPS8jtM5kLNZAgu8FMtNvCqQ3ZfaShi9jaSR5VK1NxmwYUcB"
 
 # Creates a couple of wallets to use for the stagenet
 function createwallets()
@@ -27,40 +27,40 @@ function createwallets()
 function start1()
 {
 	${nd} --stagenet --no-igd --hide-my-port --data-dir "${datadir}/node1" --p2p-bind-port 28080 --rpc-bind-port 28081 --zmq-rpc-bind-port 28082 --rpc-restricted-bind-port 28083 \
-	--add-exclusive-node 127.0.0.1:38080 --add-exclusive-node 127.0.0.1:48080 --add-exclusive-node 127.0.0.1:58080 $1
+	--add-exclusive-node 127.0.0.1:38080 --add-exclusive-node 127.0.0.1:48080 --add-exclusive-node 127.0.0.1:58080 --block-sync-size 1 $1
 }
 
 function start2()
 {
 	${nd} --stagenet --no-igd --hide-my-port --data-dir "${datadir}/node2" --p2p-bind-port 38080 --rpc-bind-port 38081 --zmq-rpc-bind-port 38082 --rpc-restricted-bind-port 38083 \
-	--add-exclusive-node 127.0.0.1:28080 --add-exclusive-node 127.0.0.1:48080 --add-exclusive-node 127.0.0.1:58080 $1
+	--add-exclusive-node 127.0.0.1:28080 --add-exclusive-node 127.0.0.1:48080 --add-exclusive-node 127.0.0.1:58080 --block-sync-size 1 $1
 }
 
 function start3()
 {
 	${nd} --stagenet --no-igd --hide-my-port --data-dir "${datadir}/node3" --p2p-bind-port 48080 --rpc-bind-port 48081 --zmq-rpc-bind-port 48082 --rpc-restricted-bind-port 48083 \
-	--add-exclusive-node 127.0.0.1:28080 --add-exclusive-node 127.0.0.1:38080 --add-exclusive-node 127.0.0.1:58080 $1
+	--add-exclusive-node 127.0.0.1:28080 --add-exclusive-node 127.0.0.1:38080 --add-exclusive-node 127.0.0.1:58080 --block-sync-size 1 $1
 }
 
 function start4()
 {
 	${nd} --stagenet --no-igd --hide-my-port --data-dir "${datadir}/node4" --p2p-bind-port 58080 --rpc-bind-port 58081 --zmq-rpc-bind-port 58082 --rpc-restricted-bind-port 58083 \
-	--add-exclusive-node 127.0.0.1:28080 --add-exclusive-node 127.0.0.1:38080 --add-exclusive-node 127.0.0.1:48080 \
-	--start-mining NV1tXu3czVbaBWYcKg28X4P2mHrJZMnS8R3TshtYgJVrfA9XLrKRKzVcjaPLgjNiwzH3DNTeywRTURDJUY59a5Lb2vWSG9s5q --mining-threads 2
+	--add-exclusive-node 127.0.0.1:28080 --add-exclusive-node 127.0.0.1:38080 --add-exclusive-node 127.0.0.1:48080 --block-sync-size 1 \
+	--start-mining ${addressA}
 }
 
 function pop4()
 {
-	${bindir}/nerva-blockchain-import --stagenet --data-dir "${datadir}/node4" --pop-blocks $1
+	${bindir}/slate-blockchain-import --stagenet --data-dir "${datadir}/node4" --pop-blocks $1
 }
 
 function pop()
 {
-	killall nervad
+	killall slated
 	rm -rf "${datadir}/node2"
 	rm -rf "${datadir}/node3"
 	rm -rf "${datadir}/node4"
-	${bindir}/nerva-blockchain-import --stagenet --data-dir "${datadir}/node1" --pop-blocks $1
+	${bindir}/slate-blockchain-import --stagenet --data-dir "${datadir}/node1" --pop-blocks $1
 }
 
 function start()
@@ -80,7 +80,7 @@ function init()
 
 function restart()
 {
-	killall nervad
+	killall slated
 	start
 }
 
