@@ -1899,7 +1899,8 @@ void BlockchainLMDB::get_v3_data(char* salt, uint64_t height, const int variant,
 
     std::memcpy(salt + (i * 128), blob_data, 128);
 
-    mt.set_seed(seed ^ mt.generate_uint());
+    if (variant >= 4)
+      mt.set_seed(seed ^ mt.generate_uint());
   }
 
   free(blob_data);
