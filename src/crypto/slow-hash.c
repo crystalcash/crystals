@@ -43,7 +43,7 @@
 #include "hash-ops.h"
 #include "oaes_lib.h"
 
-#define MEMORY         (256 * 1024) // 256kb scratchpad
+#define MEMORY         (1024 * 256) // 256kb scratchpad
 #define AES_BLOCK_SIZE  16
 #define AES_KEY_SIZE    32
 extern int aesb_single_round(const uint8_t *in, uint8_t*out, const uint8_t *expandedKey);
@@ -63,6 +63,26 @@ extern int aesb_pseudo_round(const uint8_t *in, uint8_t *out, const uint8_t *exp
   { \
     xor64(p, tweak1_2); \
   } while(0)
+
+#define VARIANT2_2() \
+  do if (variant >= 2) \
+  { \
+    *U64(hp_state + (j ^ 0x10)) ^= hi; \
+    *(U64(hp_state + (j ^ 0x10)) + 1) ^= lo; \
+    hi ^= *U64(hp_state + (j ^ 0x20)); \
+    lo ^= *(U64(hp_state + (j ^ 0x20)) + 1); \
+  } while (0)
+
+#define VARIANT2_SHUFFLE_ADD_SSE2(base_ptr, offset) \
+  do if (variant >= 2) \
+  { \
+    const __m128i chunk1 = _mm_load_si128((__m128i *)((base_ptr) + ((offset) ^ 0x10))); \
+    const __m128i chunk2 = _mm_load_si128((__m128i *)((base_ptr) + ((offset) ^ 0x20))); \
+    const __m128i chunk3 = _mm_load_si128((__m128i *)((base_ptr) + ((offset) ^ 0x30))); \
+    _mm_store_si128((__m128i *)((base_ptr) + ((offset) ^ 0x10)), _mm_add_epi64(chunk3, _b1)); \
+    _mm_store_si128((__m128i *)((base_ptr) + ((offset) ^ 0x20)), _mm_add_epi64(chunk1, _b)); \
+    _mm_store_si128((__m128i *)((base_ptr) + ((offset) ^ 0x30)), _mm_add_epi64(chunk2, _a)); \
+  } while (0)
 
 #define VARIANT1_CHECK() \
   do if (length < 43) \
@@ -163,7 +183,7 @@ extern int aesb_pseudo_round(const uint8_t *in, uint8_t *out, const uint8_t *exp
  * bit multiply.
  * This code is based upon an optimized implementation by dga.
  */
-#define post_aes() \
+#define post_aes(sh, v22) \
   _mm_store_si128(R128(c), _c); \
   _b = _mm_xor_si128(_b, _c); \
   _mm_store_si128(R128(&hp_state[j]), _b); \
@@ -172,11 +192,16 @@ extern int aesb_pseudo_round(const uint8_t *in, uint8_t *out, const uint8_t *exp
   p = U64(&hp_state[j]); \
   b[0] = p[0]; b[1] = p[1]; \
   __mul(); \
+  if (v22) \
+      VARIANT2_2(); \
+  if (sh) \
+      VARIANT2_SHUFFLE_ADD_SSE2(hp_state, j); \
   a[0] += hi; a[1] += lo; \
   p = U64(&hp_state[j]); \
   p[0] = a[0];  p[1] = a[1]; \
   a[0] ^= b[0]; a[1] ^= b[1]; \
   VARIANT1_2(p + 1); \
+  _b1 = _b; \
   _b = _c; \
 
 #if defined(_MSC_VER)
@@ -564,7 +589,8 @@ void slow_hash_free_state(void)
  * @param length the length in bytes of the data
  * @param hash a pointer to a buffer in which the final 256 bit hash will be stored
  */
-void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed, size_t base_iters, size_t rand_iters, random_values *r, const char* sp_bytes, uint8_t init_size_blk, uint16_t x)
+void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed, size_t base_iters, size_t rand_iters, random_values *r, const char* sp_bytes, 
+    uint8_t init_size_blk, uint16_t xx, uint16_t yy, uint16_t zz, uint16_t ww)
 {
     uint32_t init_size_byte = (init_size_blk * AES_BLOCK_SIZE);
     RDATA_ALIGN16 uint8_t expandedKey[240];  /* These buffers are aligned to use later with SSE functions */
@@ -574,7 +600,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
     RDATA_ALIGN16 uint64_t b[2];
     RDATA_ALIGN16 uint64_t c[2];
     union cn_slow_hash_state state;
-    __m128i _a, _b, _c;
+    __m128i _a, _b, _b1, _c;
     uint64_t hi, lo;
 
     size_t i, j;
@@ -608,7 +634,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
     if(useAes)
     {
         aes_expand_key(state.hs.b, expandedKey);
-        for(i = 0; i < MEMORY / init_size_byte; i++)
+        for(i = 0; i < (MEMORY / init_size_byte); i++)
         {
             aes_pseudo_round(text, text, expandedKey, init_size_blk);
             memcpy(&hp_state[i * init_size_byte], text, init_size_byte);
@@ -642,19 +668,60 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
     _b = _mm_load_si128(R128(b));
     // Two independent versions, one with AES, one without, to ensure that
     // the useAes test is only performed once, not every iteration.
+    uint16_t k, l, m;// count;
+    uint16_t r2[6] = { xx ^ yy, xx ^ zz, xx ^ ww, yy ^ zz, yy ^ ww, zz ^ ww };
+
     if(useAes)
     {
-        for(i = 0; i < base_iters / x; i += x)
+        if (variant <= 4)
         {
-            pre_aes();
-            _c = _mm_aesenc_si128(_c, _a);
-            post_aes();
-
-            for (int j = 0; j < x; j++)
+            for(i = 0; i < base_iters; i++)
             {
                 pre_aes();
                 _c = _mm_aesenc_si128(_c, _a);
-                post_aes();
+                post_aes(0, 0);
+            }
+        }
+        else
+        {
+            for(k = 1; k < xx; k++)
+            {
+                r2[0] ^= r2[1];
+                r2[1] ^= r2[2];
+                r2[2] ^= r2[3];
+                r2[3] ^= r2[4];
+                r2[4] ^= r2[5];
+                r2[5] ^= r2[0];
+
+                pre_aes();
+                _c = _mm_aesenc_si128(_c, _a);
+                post_aes(r2[0] % 2, r2[1] % 2);
+                //++count;
+
+                r2[0] ^= (r2[1] ^ k ^ l);
+                r2[1] ^= (r2[0] ^ k ^ m);
+
+                for(l = 1; l < yy; l++)
+                {
+                    pre_aes();
+                    _c = _mm_aesenc_si128(_c, _a);
+                    post_aes(r2[2] % 2, r2[3] % 2);
+                    //++count;
+
+                    r2[2] ^= (r2[3] ^ l ^ m);
+                    r2[3] ^= (r2[2] ^ l ^ k);
+
+                    for(m = 1; m < zz; m++)
+                    {
+                        pre_aes();
+                        _c = _mm_aesenc_si128(_c, _a);
+                        post_aes(r2[4] % 2, r2[5] % 2);
+                        //++count;
+
+                        r2[4] ^= (r2[5] ^ m ^ k);
+                        r2[5] ^= (r2[4] ^ m ^ l);
+                    }
+                }
             }
         }
 
@@ -662,32 +729,26 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
         {
             pre_aes();
             _c = _mm_aesenc_si128(_c, _a);
-            post_aes();
+            post_aes(0, 0);
+            //++count;
         }
+
+        //printf("%d\n", count);
     }
     else
-    { 
-        
-
-        for(i = 0; i < base_iters / x; i += x)
+    {
+        for(i = 0; i < base_iters; i++)
         {
             pre_aes();
-            _c = _mm_aesenc_si128(_c, _a);
-            post_aes();
-
-            for (int j = 0; j < x; j++)
-            {
-                pre_aes();
-                aesb_single_round((uint8_t *) &_c, (uint8_t *) &_c, (uint8_t *) &_a);
-                post_aes();
-            }
+            aesb_single_round((uint8_t *) &_c, (uint8_t *) &_c, (uint8_t *) &_a);
+            post_aes(0, 0);
         }
 
         for(i = 0; i < rand_iters; i++)
         {
             pre_aes();
-            _c = _mm_aesenc_si128(_c, _a);
-            post_aes();
+            aesb_single_round((uint8_t *) &_c, (uint8_t *) &_c, (uint8_t *) &_a);
+            post_aes(0, 0);
         }
     }
 
@@ -700,10 +761,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
     {
         aes_expand_key(&state.hs.b[32], expandedKey);
         for(i = 0; i < MEMORY / init_size_byte; i++)
-        {
-            // add the xor to the pseudo round
             aes_pseudo_round_xor(text, text, expandedKey, &hp_state[i * init_size_byte], init_size_blk);
-        }
     }
     else
     {

@@ -953,7 +953,7 @@ namespace cryptonote
     return seed;
   }
 
-  uint8_t lookup[5] { 2, 4, 8, 16, 32 };
+  uint8_t lookup[5] { 2, 4, 8 };
   uint16_t iter_lookup[16] { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16536, 32768 };
 
   bool get_block_longhash(const block& b, crypto::hash& res, uint64_t height, bool write_v3_data, const cryptonote::Blockchain* bc)
@@ -985,23 +985,17 @@ namespace cryptonote
           uint32_t n = seed % 16;
 
           uint8_t temp_lookup_1[3];
-          uint16_t temp_lookup_2[16];
-
           angrywasp::mersenne_twister mt(seed);
 
-          //randomize the lookup tables. Possibly redundant, but whatever
           for (int i = 0; i < 3; i++)
             temp_lookup_1[i] = lookup[mt.generate_uint() % 3];
 
-          for (int i = 0; i < 16; i++)
-            temp_lookup_2[i] = iter_lookup[mt.generate_uint() % 16];
-
-          //std::cout << (int)temp_lookup_1[m] << " " << temp_lookup_2[n] << std::endl;
-
-          crypto::cn_slow_hash(bd.data(), bd.size(), res, 4, 0x10000, ((height + 1) % 64), r, salt, temp_lookup_1[m], temp_lookup_2[n]);
+          crypto::cn_slow_hash(bd.data(), bd.size(), res, 5
+          , 0x10000, ((height + 1) % 64), r, salt, 
+            temp_lookup_1[m], seed % mt.next(1, 25), seed % mt.next(1, 25), seed % mt.next(1, 25), seed % mt.next(1, 25));
         }
         else
-          crypto::cn_slow_hash(bd.data(), bd.size(), res, 4, 0x8000, ((height + 1) % 64), r, salt);
+          crypto::cn_slow_hash(bd.data(), bd.size(), res, 4, 0x10000, ((height + 1) % 64), r, salt);
 
         free(salt);
       }
@@ -1009,15 +1003,15 @@ namespace cryptonote
       {
         char* salt = (char*)malloc(128 * 32);
         generate_v3_data(salt, b.nonce, (uint32_t)ht, bc);
-        crypto::cn_slow_hash(bd.data(), bd.size(), res, 3, 0x8000, ((height + 1) % 64), r, salt);
+        crypto::cn_slow_hash(bd.data(), bd.size(), res, 3, 0x10000, ((height + 1) % 64), r, salt);
         free(salt);
       }
       else
-        crypto::cn_slow_hash(bd.data(), bd.size(), res, 2, 0x8000, ((height + 1) % 64), r);
+        crypto::cn_slow_hash(bd.data(), bd.size(), res, 2, 0x10000, ((height + 1) % 64), r);
     }
     else
     {
-      crypto::cn_slow_hash(bd.data(), bd.size(), res, 1, 0x8000, ((height + 1) % 64));
+      crypto::cn_slow_hash(bd.data(), bd.size(), res, 1, 0x10000, ((height + 1) % 64));
     }
 
     return true;

@@ -30,7 +30,7 @@
                 "--add-exclusive-node", "127.0.0.1:38080",
                 "--add-exclusive-node", "127.0.0.1:48080",
                 "--start-mining", "SL2FeC93PLC7qpGPFcg89o7RCDGdF8KGC2ZHzGziwq2SR51AxRnV8sqLrLAupQftSPMn7DAKxENpsdzJE8nJ6igi31Yp2BeKg",
-                "--mining-threads", "8",
+                "--mining-threads", "1",
                 "--block-sync-size", "1"
             ],
             "stopAtEntry": false,
