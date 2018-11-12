@@ -71,12 +71,12 @@ namespace crypto {
     return h;
   }
 
-  inline void cn_slow_hash(const void *data, std::size_t length, hash &hash, int variant = 0, size_t iters = 0x80000, random_values *r = NULL, const char* sp_bytes = NULL) {
-    cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), variant, 0/*prehashed*/, iters, r, sp_bytes);
+  inline void cn_slow_hash(const void *data, std::size_t length, hash &hash, int variant = 0, size_t iters = 0x80000, random_values *r = NULL, const char* sp_bytes = NULL, uint8_t init_size_blk = 8) {
+    cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), variant, 0/*prehashed*/, iters, r, sp_bytes, init_size_blk);
   }
 
-  inline void cn_slow_hash_prehashed(const void *data, std::size_t length, hash &hash, int variant = 0, size_t iters = 0x80000, random_values *r = NULL, const char* sp_bytes = NULL) {
-    cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), variant, 1/*prehashed*/, iters, r, sp_bytes);
+  inline void cn_slow_hash_prehashed(const void *data, std::size_t length, hash &hash, int variant = 0, size_t iters = 0x80000, random_values *r = NULL, const char* sp_bytes = NULL, uint8_t init_size_blk = 8) {
+    cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), variant, 1/*prehashed*/, iters, r, sp_bytes, init_size_blk);
   }
 
   inline void tree_hash(const hash *hashes, std::size_t count, hash &root_hash) {

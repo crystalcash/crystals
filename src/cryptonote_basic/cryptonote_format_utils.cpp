@@ -939,7 +939,7 @@ namespace cryptonote
     bc->get_db().get_v3_data(salt, height, 3, seed);
   }
 
-  void generate_v4_data(blobdata bd, char* salt, uint32_t nonce, uint32_t height, const cryptonote::Blockchain* bc)
+  uint32_t generate_v4_data(blobdata bd, char* salt, uint32_t nonce, uint32_t height, const cryptonote::Blockchain* bc)
   {
     uint32_t seed = nonce ^ height;
 
@@ -950,7 +950,10 @@ namespace cryptonote
       seed ^= *(uint32_t*)&h.data[i];
 
     bc->get_db().get_v3_data(salt, height, 4, seed);
+    return seed;
   }
+
+  uint8_t lookup[3] { 2, 4, 8 };
 
   bool get_block_longhash(const block& b, crypto::hash& res, uint64_t height, bool write_v3_data, const cryptonote::Blockchain* bc)
   {
@@ -976,8 +979,22 @@ namespace cryptonote
       if (b.major_version >= 10)
       {
         char* salt = (char*)malloc(1024 * 256);
-        generate_v4_data(bd, salt, b.nonce, (uint32_t)ht, bc);
-        crypto::cn_slow_hash(bd.data(), bd.size(), res, 4, cn_iters, r, salt);
+        uint32_t seed = generate_v4_data(bd, salt, b.nonce, (uint32_t)ht, bc);
+        if (b.major_version >= 11)
+        {
+          uint32_t y = seed % 3;
+          uint8_t temp_lookup[3];
+
+          //randomize the lookup table
+          for (int i = 0; i < 3; i++)
+            temp_lookup[i] = lookup[*((uint8_t*)&seed + i) % 3];
+
+          //std::cout << (int)temp_lookup[0] << " " << (int)temp_lookup[1] << " " << (int)temp_lookup[2] << " " << (int)y << std::endl;
+
+          crypto::cn_slow_hash(bd.data(), bd.size(), res, 4, cn_iters, r, salt, temp_lookup[y]);
+        }
+        else
+          crypto::cn_slow_hash(bd.data(), bd.size(), res, 4, cn_iters, r, salt);
         free(salt);
       }
       else if (b.major_version >= 9)

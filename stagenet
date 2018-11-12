@@ -46,7 +46,7 @@ function start4()
 {
 	${nd} --stagenet --no-igd --hide-my-port --data-dir "${datadir}/node4" --p2p-bind-port 58080 --rpc-bind-port 58081 --zmq-rpc-bind-port 58082 --rpc-restricted-bind-port 58083 \
 	--add-exclusive-node 127.0.0.1:28080 --add-exclusive-node 127.0.0.1:38080 --add-exclusive-node 127.0.0.1:48080 --block-sync-size 1 \
-	--start-mining ${addressA}
+	--start-mining ${addressA} --mining-threads 8
 }
 
 function pop4()
