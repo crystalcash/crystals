@@ -564,7 +564,7 @@ void slow_hash_free_state(void)
  * @param length the length in bytes of the data
  * @param hash a pointer to a buffer in which the final 256 bit hash will be stored
  */
-void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed, size_t iters, random_values *r, const char* sp_bytes, uint8_t init_size_blk)
+void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed, size_t base_iters, size_t rand_iters, random_values *r, const char* sp_bytes, uint8_t init_size_blk, uint16_t x)
 {
     uint32_t init_size_byte = (init_size_blk * AES_BLOCK_SIZE);
     RDATA_ALIGN16 uint8_t expandedKey[240];  /* These buffers are aligned to use later with SSE functions */
@@ -644,7 +644,21 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
     // the useAes test is only performed once, not every iteration.
     if(useAes)
     {
-        for(i = 0; i < iters; i++)
+        for(i = 0; i < base_iters / x; i += x)
+        {
+            pre_aes();
+            _c = _mm_aesenc_si128(_c, _a);
+            post_aes();
+
+            for (int j = 0; j < x; j++)
+            {
+                pre_aes();
+                _c = _mm_aesenc_si128(_c, _a);
+                post_aes();
+            }
+        }
+
+        for(i = 0; i < rand_iters; i++)
         {
             pre_aes();
             _c = _mm_aesenc_si128(_c, _a);
@@ -652,11 +666,27 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
         }
     }
     else
-    {
-        for(i = 0; i < iters; i++)
+    { 
+        
+
+        for(i = 0; i < base_iters / x; i += x)
         {
             pre_aes();
-            aesb_single_round((uint8_t *) &_c, (uint8_t *) &_c, (uint8_t *) &_a);
+            _c = _mm_aesenc_si128(_c, _a);
+            post_aes();
+
+            for (int j = 0; j < x; j++)
+            {
+                pre_aes();
+                aesb_single_round((uint8_t *) &_c, (uint8_t *) &_c, (uint8_t *) &_a);
+                post_aes();
+            }
+        }
+
+        for(i = 0; i < rand_iters; i++)
+        {
+            pre_aes();
+            _c = _mm_aesenc_si128(_c, _a);
             post_aes();
         }
     }

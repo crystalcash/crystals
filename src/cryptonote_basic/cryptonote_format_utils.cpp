@@ -953,7 +953,8 @@ namespace cryptonote
     return seed;
   }
 
-  uint8_t lookup[3] { 2, 4, 8 };
+  uint8_t lookup[5] { 2, 4, 8, 16, 32 };
+  uint16_t iter_lookup[16] { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16536, 32768 };
 
   bool get_block_longhash(const block& b, crypto::hash& res, uint64_t height, bool write_v3_data, const cryptonote::Blockchain* bc)
   {
@@ -963,8 +964,6 @@ namespace cryptonote
 
     if (b.major_version >= 7)
       ht = height - CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
-
-    int cn_iters = 0x10000 + ((height + 1) % 64);
 
     if (b.major_version >= 7)
     {
@@ -982,34 +981,43 @@ namespace cryptonote
         uint32_t seed = generate_v4_data(bd, salt, b.nonce, (uint32_t)ht, bc);
         if (b.major_version >= 11)
         {
-          uint32_t y = seed % 3;
-          uint8_t temp_lookup[3];
+          uint32_t m = seed % 3;
+          uint32_t n = seed % 16;
 
-          //randomize the lookup table
+          uint8_t temp_lookup_1[3];
+          uint16_t temp_lookup_2[16];
+
+          angrywasp::mersenne_twister mt(seed);
+
+          //randomize the lookup tables. Possibly redundant, but whatever
           for (int i = 0; i < 3; i++)
-            temp_lookup[i] = lookup[*((uint8_t*)&seed + i) % 3];
+            temp_lookup_1[i] = lookup[mt.generate_uint() % 3];
 
-          //std::cout << (int)temp_lookup[0] << " " << (int)temp_lookup[1] << " " << (int)temp_lookup[2] << " " << (int)y << std::endl;
+          for (int i = 0; i < 16; i++)
+            temp_lookup_2[i] = iter_lookup[mt.generate_uint() % 16];
 
-          crypto::cn_slow_hash(bd.data(), bd.size(), res, 4, cn_iters, r, salt, temp_lookup[y]);
+          //std::cout << (int)temp_lookup_1[m] << " " << temp_lookup_2[n] << std::endl;
+
+          crypto::cn_slow_hash(bd.data(), bd.size(), res, 4, 0x10000, ((height + 1) % 64), r, salt, temp_lookup_1[m], temp_lookup_2[n]);
         }
         else
-          crypto::cn_slow_hash(bd.data(), bd.size(), res, 4, cn_iters, r, salt);
+          crypto::cn_slow_hash(bd.data(), bd.size(), res, 4, 0x8000, ((height + 1) % 64), r, salt);
+
         free(salt);
       }
       else if (b.major_version >= 9)
       {
         char* salt = (char*)malloc(128 * 32);
         generate_v3_data(salt, b.nonce, (uint32_t)ht, bc);
-        crypto::cn_slow_hash(bd.data(), bd.size(), res, 3, cn_iters, r, salt);
+        crypto::cn_slow_hash(bd.data(), bd.size(), res, 3, 0x8000, ((height + 1) % 64), r, salt);
         free(salt);
       }
       else
-        crypto::cn_slow_hash(bd.data(), bd.size(), res, 2, cn_iters, r, NULL);
+        crypto::cn_slow_hash(bd.data(), bd.size(), res, 2, 0x8000, ((height + 1) % 64), r);
     }
     else
     {
-      crypto::cn_slow_hash(bd.data(), bd.size(), res, 1, cn_iters, NULL, NULL);
+      crypto::cn_slow_hash(bd.data(), bd.size(), res, 1, 0x8000, ((height + 1) % 64));
     }
 
     return true;
