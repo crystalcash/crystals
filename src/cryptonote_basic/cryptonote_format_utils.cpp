@@ -991,8 +991,10 @@ namespace cryptonote
             temp_lookup_1[i] = lookup[mt.generate_uint() % 3];
 
           crypto::cn_slow_hash(bd.data(), bd.size(), res, 5
-          , 0x10000, ((height + 1) % 64), r, salt, 
-            temp_lookup_1[m], seed % mt.next(1, 25), seed % mt.next(1, 25), seed % mt.next(1, 25), seed % mt.next(1, 25));
+          , 0x10000, ((height + 1) % 64), r, salt, temp_lookup_1[m], 
+          (seed % mt.next(10, 50)) + mt.next(10, 25), 
+          (seed % mt.next(10, 50)) + mt.next(10, 25), 
+          (seed % mt.next(10, 50)) + mt.next(10, 25), seed % mt.next(1, 10000));
         }
         else
           crypto::cn_slow_hash(bd.data(), bd.size(), res, 4, 0x10000, ((height + 1) % 64), r, salt);
