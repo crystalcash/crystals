@@ -718,7 +718,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
                 }
             }
         }
-
+        
         for(i = 0; i < rand_iters; i++)
         {
             pre_aes();
