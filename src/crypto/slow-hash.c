@@ -1026,7 +1026,8 @@ STATIC INLINE void aes_pseudo_round_xor(const uint8_t *in, uint8_t *out, const u
 	}
 }
 
-void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed, size_t iters, random_values *r, const char* sp_bytes)
+void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed, size_t base_iters, size_t rand_iters, random_values *r, const char* sp_bytes, 
+    uint8_t init_size_blk, uint16_t xx, uint16_t yy, uint16_t zz, uint16_t ww)
 {
     RDATA_ALIGN16 uint8_t expandedKey[240];
     RDATA_ALIGN16 uint8_t hp_state[MEMORY];
@@ -1083,15 +1084,64 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
 
     _b = vld1q_u8((const uint8_t *)b);
 
+    uint16_t k, l, m;
+    uint16_t r2[6] = { xx ^ yy, xx ^ zz, xx ^ ww, yy ^ zz, yy ^ ww, zz ^ ww };
 
-    for(i = 0; i < iters; i++)
+    if (variant <= 4)
     {
-        pre_aes();
-        _c = vaeseq_u8(_c, zero);
-        _c = vaesmcq_u8(_c);
-        _c = veorq_u8(_c, _a);
-        post_aes();
+        for(i = 0; i < base_iters; i++)
+        {
+            pre_aes();
+            _c = vaeseq_u8(_c, zero);
+            _c = vaesmcq_u8(_c);
+            _c = veorq_u8(_c, _a);
+            post_aes();
+        }
     }
+    else
+    {
+        for(k = 1; k < xx; k++)
+        {
+            r2[0] ^= r2[1];
+            r2[1] ^= r2[2];
+            r2[2] ^= r2[3];
+            r2[3] ^= r2[4];
+            r2[4] ^= r2[5];
+            r2[5] ^= r2[0];
+
+            pre_aes();
+            _c = vaeseq_u8(_c, zero);
+            _c = vaesmcq_u8(_c);
+            _c = veorq_u8(_c, _a);
+            post_aes(r2[0] % 2, r2[1] % 2);
+            r2[0] ^= (r2[1] ^ k ^ l);
+            r2[1] ^= (r2[0] ^ k ^ m);
+
+            for(l = 1; l < yy; l++)
+            {
+                pre_aes();
+                _c = vaeseq_u8(_c, zero);
+                _c = vaesmcq_u8(_c);
+                _c = veorq_u8(_c, _a);
+                post_aes(r2[2] % 2, r2[3] % 2);
+                r2[2] ^= (r2[3] ^ l ^ m);
+                r2[3] ^= (r2[2] ^ l ^ k);
+
+                for(m = 1; m < zz; m++)
+                {
+                    pre_aes();
+                    _c = vaeseq_u8(_c, zero);
+                    _c = vaesmcq_u8(_c);
+                    _c = veorq_u8(_c, _a);
+                    post_aes(r2[4] % 2, r2[5] % 2);
+                    r2[4] ^= (r2[5] ^ m ^ k);
+                    r2[5] ^= (r2[4] ^ m ^ l);
+                }
+            }
+        }
+    }
+
+    
 
     /* CryptoNight Step 4:  Sequentially pass through the mixing buffer and use 10 rounds
      * of AES encryption to mix the random data back into the 'text' buffer.  'text'
