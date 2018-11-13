@@ -666,6 +666,9 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
      */
 
     _b = _mm_load_si128(R128(b));
+    //TODO: Missed in slate 1.0.2.1. _b1 is uninitialized on first pass
+    //_b1 = _mm_load_si128(R128(b) + 1);
+    
     // Two independent versions, one with AES, one without, to ensure that
     // the useAes test is only performed once, not every iteration.
     uint16_t k, l, m;
