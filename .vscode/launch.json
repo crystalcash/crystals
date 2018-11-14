@@ -105,12 +105,13 @@
             "name": "Mainnet",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/debug/bin/slated",
+            "program": "${workspaceFolder}/builder/build/debug/bin/slated",
             "args": [
-                "--start-mining", "NV1r8P6THPASAQX77re6hXTMJ1ykXXvtYXFXgMv4vFAQNYo3YatUvZ8LFNRu4dPQBjTwqJbMvqoeiipywmREPHpD2AgWnmG7Q",
-                "--mining-threads", "8",
                 "--block-sync-size", "1",
-                "--db-readers", "5000"
+                "--min-version", "1.0.2.0",
+                "--add-exclusive-node", "204.48.17.173",
+                "--add-exclusive-node", "206.81.2.10",
+                "--add-exclusive-node", "206.81.2.12"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

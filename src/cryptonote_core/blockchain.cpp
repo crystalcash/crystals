@@ -83,6 +83,7 @@ DISABLE_VS_WARNINGS(4267)
 
 // used to overestimate the block reward when estimating a per kB to use
 #define BLOCK_REWARD_OVERESTIMATE (10 * 1000000000000)
+
 //hf: todo: add hardfork block for mainnet
 static const struct {
   uint8_t version;
@@ -292,6 +293,21 @@ bool Blockchain::scan_outputkeys_for_indexes(size_t tx_version, const txin_to_ke
   }
 
   return true;
+}
+
+uint32_t Blockchain::get_minimum_version_for_fork() const
+{
+  const uint64_t top_height = m_db->height() - 1;
+  const block top_block = m_db->get_top_block();
+  const uint8_t ideal_hf_version = get_ideal_hard_fork_version(top_height);
+  if (ideal_hf_version <= 1 || ideal_hf_version == top_block.major_version)
+  {
+    //we are at the top block. So if the HF_SUPPORTED_MIN_VERSION > SUPPORTED_MIN_VERSION, that becomes our new minimum version
+    if (HF_SUPPORTED_MIN_VERSION > SUPPORTED_MIN_VERSION)
+      return HF_SUPPORTED_MIN_VERSION;
+  }
+
+  return SUPPORTED_MIN_VERSION;
 }
 
 HardFork* Blockchain::get_hardfork() const

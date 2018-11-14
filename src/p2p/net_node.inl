@@ -86,6 +86,7 @@ namespace nodetool
     command_line::add_arg(desc, arg_limit_rate_down);
     command_line::add_arg(desc, arg_limit_rate);
     command_line::add_arg(desc, arg_save_graph);
+    command_line::add_arg(desc, arg_min_ver);
   }
   //-----------------------------------------------------------------------------------
   template<class t_payload_net_handler>
@@ -329,6 +330,13 @@ namespace nodetool
 
     if ( !set_rate_limit(vm, command_line::get_arg(vm, arg_limit_rate) ) )
       return false;
+
+    if(command_line::has_arg(vm, arg_min_ver))
+    {
+      std::string v = command_line::get_arg(vm, arg_min_ver);
+      MGINFO_CYAN("Blocking all hosts with versions < " << v);
+      m_minimum_version = version_string_to_integer(v);
+    }
 
     return true;
   }
@@ -723,7 +731,10 @@ namespace nodetool
       if (hsh_result)
       {
         uint32_t rsp_ver = version_string_to_integer(rsp.version);
-        if (rsp_ver < SUPPORTED_MIN_VERSION)
+        MGINFO_CYAN("Request peer id: " << context.m_remote_address.str() << " v" << rsp.version);
+        //uint32_t min_ver = core->get_minimum_supported_version();
+        //if (rsp_ver < min_ver)
+        if (rsp_ver < m_minimum_version)
         {
           MGINFO_CYAN("Host " << context.m_remote_address.str() << " has incorrect version: " << rsp.version);
           hsh_result = false;
@@ -779,7 +790,9 @@ namespace nodetool
       }
 
       uint32_t rsp_ver = version_string_to_integer(rsp.node_data.version);
-      if (rsp_ver < SUPPORTED_MIN_VERSION)
+      //uint32_t min_ver = core->get_minimum_supported_version();
+      //if (rsp_ver < min_ver)
+      if (rsp_ver < m_minimum_version)
       {
         MGINFO_CYAN("Host " << context.m_remote_address.str() << " has incorrect version: " << rsp.node_data.version);
         block_host(context.m_remote_address);
@@ -1743,7 +1756,10 @@ namespace nodetool
     }
 
     uint32_t rsp_ver = version_string_to_integer(arg.node_data.version);
-    if (rsp_ver < SUPPORTED_MIN_VERSION)
+    MGINFO_CYAN("Handshaking with host: " << context.m_remote_address.str() << " v" << arg.node_data.version);
+    //uint32_t min_ver = core->get_minimum_supported_version();
+    //if (rsp_ver < min_ver)
+    if (rsp_ver < m_minimum_version)
     {
       MGINFO_CYAN("Host " << context.m_remote_address.str() << " has incorrect version: " << arg.node_data.version);
       drop_connection(context);
