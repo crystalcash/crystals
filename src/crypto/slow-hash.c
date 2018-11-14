@@ -666,12 +666,11 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
      */
 
     _b = _mm_load_si128(R128(b));
-    //TODO: Missed in slate 1.0.2.1. _b1 is uninitialized on first pass
-    //_b1 = _mm_load_si128(R128(b) + 1);
+    _b1 = _mm_load_si128(R128(b) + 1);
     
     // Two independent versions, one with AES, one without, to ensure that
     // the useAes test is only performed once, not every iteration.
-    uint16_t k, l, m;
+    uint16_t k = 1, l = 1, m = 1;
     uint16_t r2[6] = { xx ^ yy, xx ^ zz, xx ^ ww, yy ^ zz, yy ^ ww, zz ^ ww };
 
     if(useAes)
@@ -699,24 +698,24 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
                 pre_aes();
                 _c = _mm_aesenc_si128(_c, _a);
                 post_aes(r2[0] % 2, r2[1] % 2);
-                r2[0] ^= (r2[1] ^ k ^ l);
-                r2[1] ^= (r2[0] ^ k ^ m);
+                r2[0] ^= (r2[1] ^ (k * l));
+                r2[1] ^= (r2[0] ^ (k + m));
 
                 for(l = 1; l < yy; l++)
                 {
                     pre_aes();
                     _c = _mm_aesenc_si128(_c, _a);
                     post_aes(r2[2] % 2, r2[3] % 2);
-                    r2[2] ^= (r2[3] ^ l ^ m);
-                    r2[3] ^= (r2[2] ^ l ^ k);
+                    r2[2] ^= (r2[3] ^ (l - m));
+                    r2[3] ^= (r2[2] ^ (l - k));
 
                     for(m = 1; m < zz; m++)
                     {
                         pre_aes();
                         _c = _mm_aesenc_si128(_c, _a);
                         post_aes(r2[4] % 2, r2[5] % 2);
-                        r2[4] ^= (r2[5] ^ m ^ k);
-                        r2[5] ^= (r2[4] ^ m ^ l);
+                        r2[4] ^= (r2[5] ^ (m * k));
+                        r2[5] ^= (r2[4] ^ (m + l));
                     }
                 }
             }

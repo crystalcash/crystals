@@ -97,7 +97,7 @@ namespace nodetool
     static void init_options(boost::program_options::options_description& desc);
 
     bool run();
-    bool init(const boost::program_options::variables_map& vm);
+    bool init(const boost::program_options::variables_map& vm);//, cryptonote::core cc_core);
     bool deinit();
     bool send_stop_signal();
     uint32_t get_this_peer_port(){return m_listening_port;}
@@ -293,6 +293,7 @@ namespace nodetool
     bool m_allow_local_ip;
     bool m_hide_my_port;
     bool m_no_igd;
+    //cryptonote::core m_core;
     bool m_offline;
     uint32_t m_minimum_version;
     std::atomic<bool> m_save_graph;
