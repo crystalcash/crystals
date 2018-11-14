@@ -982,7 +982,6 @@ namespace cryptonote
         if (b.major_version >= 11)
         {
           uint32_t m = seed % 3;
-          uint32_t n = seed % 16;
 
           uint8_t temp_lookup_1[3];
           angrywasp::mersenne_twister mt(seed);

@@ -753,24 +753,24 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
                 pre_aes();
                 aesb_single_round((uint8_t *) &_c, (uint8_t *) &_c, (uint8_t *) &_a);
                 post_aes(r2[0] % 2, r2[1] % 2);
-                r2[0] ^= (r2[1] ^ k ^ l);
-                r2[1] ^= (r2[0] ^ k ^ m);
+                r2[0] ^= (r2[1] ^ (k * l));
+                r2[1] ^= (r2[0] ^ (k + m));
 
                 for(l = 1; l < yy; l++)
                 {
                     pre_aes();
                     aesb_single_round((uint8_t *) &_c, (uint8_t *) &_c, (uint8_t *) &_a);
                     post_aes(r2[2] % 2, r2[3] % 2);
-                    r2[2] ^= (r2[3] ^ l ^ m);
-                    r2[3] ^= (r2[2] ^ l ^ k);
+                    r2[2] ^= (r2[3] ^ (l - m));
+                    r2[3] ^= (r2[2] ^ (l - k));
 
                     for(m = 1; m < zz; m++)
                     {
                         pre_aes();
                         aesb_single_round((uint8_t *) &_c, (uint8_t *) &_c, (uint8_t *) &_a);
                         post_aes(r2[4] % 2, r2[5] % 2);
-                        r2[4] ^= (r2[5] ^ m ^ k);
-                        r2[5] ^= (r2[4] ^ m ^ l);
+                        r2[4] ^= (r2[5] ^ (m * k));
+                        r2[5] ^= (r2[4] ^ (m + l));
                     }
                 }
             }
