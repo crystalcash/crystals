@@ -954,7 +954,6 @@ namespace cryptonote
   }
 
   uint8_t lookup[5] { 2, 4, 8 };
-  uint16_t iter_lookup[16] { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16536, 32768 };
 
   bool get_block_longhash(const block& b, crypto::hash& res, uint64_t height, bool write_v3_data, const cryptonote::Blockchain* bc)
   {

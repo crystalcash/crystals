@@ -64,6 +64,13 @@ extern int aesb_pseudo_round(const uint8_t *in, uint8_t *out, const uint8_t *exp
     xor64(p, tweak1_2); \
   } while(0)
 
+#define VARIANT2_INIT64() \
+  do if (variant >= 2) \
+  { \
+    U64(b)[2] = state.hs.w[8] ^ state.hs.w[10]; \
+    U64(b)[3] = state.hs.w[9] ^ state.hs.w[11]; \
+  } while (0)
+
 #define VARIANT2_2() \
   do if (variant >= 2) \
   { \
@@ -185,8 +192,7 @@ extern int aesb_pseudo_round(const uint8_t *in, uint8_t *out, const uint8_t *exp
  */
 #define post_aes(sh, v22) \
   _mm_store_si128(R128(c), _c); \
-  _b = _mm_xor_si128(_b, _c); \
-  _mm_store_si128(R128(&hp_state[j]), _b); \
+  _mm_store_si128(R128(&hp_state[j]), _mm_xor_si128(_b, _c)); \
   VARIANT1_1(&hp_state[j]); \
   j = state_index(c); \
   p = U64(&hp_state[j]); \
@@ -334,7 +340,7 @@ STATIC INLINE void aes_256_assist2(__m128i* t1, __m128i * t3)
  * CPU AES support.
  * For more information about these functions, see page 19 of Intel's AES instructions
  * white paper:
- * http://www.intel.com/content/dam/www/public/us/en/documents/white-papers/aes-instructions-set-white-paper.pdf
+ * https://www.intel.com/content/dam/doc/white-paper/advanced-encryption-standard-new-instructions-set-paper.pdf
  *
  * @param key the input 128 bit key
  * @param expandedKey An output buffer to hold the generated key schedule
@@ -517,7 +523,7 @@ void slow_hash_allocate_state(void)
                                         MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 #else
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || \
-  defined(__DragonFly__)
+  defined(__DragonFly__) || defined(__NetBSD__)
     hp_state = mmap(0, MEMORY, PROT_READ | PROT_WRITE,
                     MAP_PRIVATE | MAP_ANON, 0, 0);
 #else
@@ -549,7 +555,7 @@ void slow_hash_free_state(void)
     else
     {
 #if defined(_MSC_VER) || defined(__MINGW32__)
-        VirtualFree(hp_state, MEMORY, MEM_RELEASE);
+        VirtualFree(hp_state, 0, MEM_RELEASE);
 #else
         munmap(hp_state, MEMORY);
 #endif
@@ -583,7 +589,7 @@ void slow_hash_free_state(void)
  * AES support on x86 CPUs.
  *
  * A diagram of the inner loop of this function can be found at
- * http://www.cs.cmu.edu/~dga/crypto/xmr/cryptonight.png
+ * https://www.cs.cmu.edu/~dga/crypto/xmr/cryptonight.png
  *
  * @param data the data to hash
  * @param length the length in bytes of the data
@@ -597,7 +603,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
 
     uint8_t* text = (uint8_t*)malloc(init_size_byte);
     RDATA_ALIGN16 uint64_t a[2];
-    RDATA_ALIGN16 uint64_t b[2];
+    RDATA_ALIGN16 uint64_t b[4];
     RDATA_ALIGN16 uint64_t c[2];
     union cn_slow_hash_state state;
     __m128i _a, _b, _b1, _c;
@@ -626,6 +632,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
     memcpy(text, state.init, init_size_byte);
 
     VARIANT1_INIT64();
+    VARIANT2_INIT64();
 
     /* CryptoNight Step 2:  Iteratively encrypt the results from Keccak to fill
      * the 2MB large random access buffer.
