@@ -407,8 +407,6 @@ namespace nodetool
     bool res = handle_command_line(vm);
     CHECK_AND_ASSERT_MES(res, false, "Failed to handle command line");
 
-    //m_core = cc_core;
-
     if (m_nettype == cryptonote::TESTNET)
     {
       memcpy(&m_network_id, &::config::testnet::NETWORK_ID, 16);
@@ -733,9 +731,6 @@ namespace nodetool
       if (hsh_result)
       {
         uint32_t rsp_ver = version_string_to_integer(rsp.version);
-        //MGINFO_CYAN("Request peer id: " << context.m_remote_address.str() << " v" << rsp.version);
-        //uint32_t min_ver = m_core.get_minimum_supported_version();
-        //if (rsp_ver < min_ver)
         if (rsp_ver < m_minimum_version)
         {
           MGINFO_CYAN("Host " << context.m_remote_address.str() << " has incorrect version: " << rsp.version);
@@ -792,8 +787,6 @@ namespace nodetool
       }
 
       uint32_t rsp_ver = version_string_to_integer(rsp.node_data.version);
-      //uint32_t min_ver = m_core.get_minimum_supported_version();
-      //if (rsp_ver < min_ver)
       if (rsp_ver < m_minimum_version)
       {
         MGINFO_CYAN("Host " << context.m_remote_address.str() << " has incorrect version: " << rsp.node_data.version);
@@ -1758,9 +1751,6 @@ namespace nodetool
     }
 
     uint32_t rsp_ver = version_string_to_integer(arg.node_data.version);
-    //MGINFO_CYAN("Handshaking with host: " << context.m_remote_address.str() << " v" << arg.node_data.version);
-    //uint32_t min_ver = m_core.get_minimum_supported_version();
-    //if (rsp_ver < min_ver)
     if (rsp_ver < m_minimum_version)
     {
       MGINFO_CYAN("Host " << context.m_remote_address.str() << " has incorrect version: " << arg.node_data.version);

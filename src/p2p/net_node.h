@@ -293,7 +293,6 @@ namespace nodetool
     bool m_allow_local_ip;
     bool m_hide_my_port;
     bool m_no_igd;
-    //cryptonote::core m_core;
     bool m_offline;
     uint32_t m_minimum_version;
     std::atomic<bool> m_save_graph;
