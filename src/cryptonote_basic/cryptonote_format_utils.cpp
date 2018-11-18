@@ -856,20 +856,17 @@ namespace cryptonote
   //---------------------------------------------------------------
 
   uint64_t cached_height = 0;
-  uint8_t* cn_bytes = NULL;
-  random_values *r = NULL;
+  random_values* r = NULL;
   critical_section m_v2_lock;
 
-  bool v2_initialized = false;
-  
   void generate_v2_data(uint64_t ht, const cryptonote::Blockchain* bc)
   {
-    if (!v2_initialized)
-    {
-      cn_bytes = (uint8_t*)malloc(128);
-      r = (random_values *)malloc(sizeof(random_values));
-      v2_initialized = true;
-    }
+    uint8_t* cbt = (uint8_t*)malloc(128);
+    if (r != NULL)
+      free(r);
+
+    r = (random_values*)malloc(sizeof(random_values));
+    uint8_t* cn_bytes = cbt;
 
     crypto::hash h0 = bc->get_block_id_by_height(ht);
 
@@ -915,6 +912,8 @@ namespace cryptonote
         cn_bytes[i + 5] << 8 | 
         cn_bytes[i + 7]) % sp_size;
     }
+
+    free(cbt);
   }
 
   char const hex[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B','C','D','E','F'};
@@ -966,7 +965,7 @@ namespace cryptonote
 
     if (b.major_version >= 7)
     {
-      if (height != cached_height || !v2_initialized)
+      if (height != cached_height)
       {
         CRITICAL_REGION_BEGIN(m_v2_lock);
           cached_height = height;
@@ -974,9 +973,12 @@ namespace cryptonote
         CRITICAL_REGION_END();
       }
 
+
+
       if (b.major_version >= 10)
       {
-        char* salt = (char*)malloc(1024 * 256);
+        char* salt_data = (char*)malloc(1024 * 256);
+        char* salt = salt_data;
         uint32_t seed = generate_v4_data(bd, salt, b.nonce, (uint32_t)ht, bc);
         if (b.major_version >= 11)
         {
@@ -997,7 +999,7 @@ namespace cryptonote
         else
           crypto::cn_slow_hash(bd.data(), bd.size(), res, 4, 0x10000, ((height + 1) % 64), r, salt);
 
-        free(salt);
+        free(salt_data);
       }
       else if (b.major_version >= 9)
       {

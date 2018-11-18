@@ -1822,7 +1822,8 @@ void BlockchainLMDB::get_v3_data(char* salt, uint64_t height, const int variant,
   MDB_txn *txn;
   MDB_cursor *cur;
   angrywasp::mersenne_twister mt(seed);
-  char* blob_data = (char*)malloc(128);
+  char* bd = (char*)malloc(128);
+  char* blob_data = bd;
   
   int err = 0;
   uint32_t t = 0;
@@ -1903,7 +1904,7 @@ void BlockchainLMDB::get_v3_data(char* salt, uint64_t height, const int variant,
       mt.set_seed(seed ^ mt.generate_uint());
   }
 
-  free(blob_data);
+  free(bd);
   mdb_cursor_close(cur);
   mdb_txn_abort(txn); 
 }
