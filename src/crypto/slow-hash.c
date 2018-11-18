@@ -1385,40 +1385,6 @@ STATIC INLINE void xor_blocks(uint8_t* a, const uint8_t* b)
   U64(a)[1] ^= U64(b)[1];
 }
 
-STATIC INLINE void iter_pass(uint8_t sh, uint8_t v22)
-{
-    // Iteration 1
-    j = state_index(a);
-    p = &long_state[j];
-    aesb_single_round(p, p, a);
-    copy_block(c1, p);
-
-    xor_blocks(b, p);
-    VARIANT1_1(p);
-
-    // Iteration 2
-    j = state_index(c1);
-    p = &long_state[j];
-    copy_block(c, p);
-
-    mul(c1, c, d);
-    if (v22)
-        VARIANT2_2_PORTABLE();
-    if (sh)
-        VARIANT2_PORTABLE_SHUFFLE_ADD(long_state, j);
-
-    sum_half_blocks(b, d);
-    swap_blocks(b, p);
-    xor_blocks(b, p);
-    swap_blocks(a, b);
-    VARIANT1_2(U64(p) + 1);
-    copy_block(p, c);
-    if (variant >= 2) {
-    copy_block(b + AES_BLOCK_SIZE, b);
-    }
-    copy_block(b, c1);
-}
-
 void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed, size_t iters, random_values *r, const char* sp_bytes,
     uint8_t init_size_blk, uint16_t xx, uint16_t yy, uint16_t zz, uint16_t ww)
 {
@@ -1484,7 +1450,25 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
     {
         for(i = 0; i < base_iters; i++)
         {
-            iter_pass(0, 0);  
+            j = state_index(a);
+            p = &long_state[j];
+            aesb_single_round(p, p, a);
+            copy_block(c1, p);
+            xor_blocks(b, p);
+            VARIANT1_1(p);
+
+            j = state_index(c1);
+            p = &long_state[j];
+            copy_block(c, p);
+            mul(c1, c, d);
+            sum_half_blocks(b, d);
+            swap_blocks(b, p);
+            xor_blocks(b, p);
+            swap_blocks(a, b);
+            VARIANT1_2(U64(p) + 1);
+            copy_block(p, c);
+            copy_block(b + AES_BLOCK_SIZE, b);
+            copy_block(b, c1); 
         }
     }
     else
@@ -1498,19 +1482,88 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
             r2[4] ^= r2[5];
             r2[5] ^= r2[0];
 
-            iter_pass(r2[0] % 2, r2[1] % 2); 
+            j = state_index(a);
+            p = &long_state[j];
+            aesb_single_round(p, p, a);
+            copy_block(c1, p);
+            xor_blocks(b, p);
+            VARIANT1_1(p);
+
+            j = state_index(c1);
+            p = &long_state[j];
+            copy_block(c, p);
+            mul(c1, c, d);
+            if (r2[1] % 2)
+                VARIANT2_2_PORTABLE();
+            if (r2[0] % 2)
+                VARIANT2_PORTABLE_SHUFFLE_ADD(long_state, j);
+            sum_half_blocks(b, d);
+            swap_blocks(b, p);
+            xor_blocks(b, p);
+            swap_blocks(a, b);
+            VARIANT1_2(U64(p) + 1);
+            copy_block(p, c);
+            copy_block(b + AES_BLOCK_SIZE, b);
+            copy_block(b, c1); 
+
             r2[0] ^= (r2[1] ^ (k * l));
             r2[1] ^= (r2[0] ^ (k + m));
 
             for(l = 1; l < yy; l++)
             {
-                iter_pass(r2[2] % 2, r2[3] % 2); 
+                j = state_index(a);
+                p = &long_state[j];
+                aesb_single_round(p, p, a);
+                copy_block(c1, p);
+                xor_blocks(b, p);
+                VARIANT1_1(p);
+
+                j = state_index(c1);
+                p = &long_state[j];
+                copy_block(c, p);
+                mul(c1, c, d);
+                if (r2[3] % 2)
+                    VARIANT2_2_PORTABLE();
+                if (r2[2] % 2)
+                    VARIANT2_PORTABLE_SHUFFLE_ADD(long_state, j);
+                sum_half_blocks(b, d);
+                swap_blocks(b, p);
+                xor_blocks(b, p);
+                swap_blocks(a, b);
+                VARIANT1_2(U64(p) + 1);
+                copy_block(p, c);
+                copy_block(b + AES_BLOCK_SIZE, b);
+                copy_block(b, c1); 
+
                 r2[2] ^= (r2[3] ^ (l - m));
                 r2[3] ^= (r2[2] ^ (l - k));
 
                 for(m = 1; m < zz; m++)
                 {
-                    iter_pass(r2[4] % 2, r2[5] % 2); 
+                    j = state_index(a);
+                    p = &long_state[j];
+                    aesb_single_round(p, p, a);
+                    copy_block(c1, p);
+                    xor_blocks(b, p);
+                    VARIANT1_1(p);
+
+                    j = state_index(c1);
+                    p = &long_state[j];
+                    copy_block(c, p);
+                    mul(c1, c, d);
+                    if (r2[5] % 2)
+                        VARIANT2_2_PORTABLE();
+                    if (r2[4] % 2)
+                        VARIANT2_PORTABLE_SHUFFLE_ADD(long_state, j);
+                    sum_half_blocks(b, d);
+                    swap_blocks(b, p);
+                    xor_blocks(b, p);
+                    swap_blocks(a, b);
+                    VARIANT1_2(U64(p) + 1);
+                    copy_block(p, c);
+                    copy_block(b + AES_BLOCK_SIZE, b);
+                    copy_block(b, c1); 
+
                     r2[4] ^= (r2[5] ^ (m * k));
                     r2[5] ^= (r2[4] ^ (m + l));
                 }
@@ -1648,7 +1701,8 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
   uint8_t* text = (uint8_t*)malloc(init_size_byte);
   uint8_t a[AES_BLOCK_SIZE];
   uint8_t b[AES_BLOCK_SIZE * 2];
-  uint8_t c[AES_BLOCK_SIZE];
+  uint8_t c1[AES_BLOCK_SIZE];
+  uint8_t c2[AES_BLOCK_SIZE];
   uint8_t d[AES_BLOCK_SIZE];
   size_t i, j;
   uint8_t aes_key[AES_KEY_SIZE];
@@ -1688,27 +1742,27 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
   {
     for (i = 0; i < base_iters; i++)
     {
-        j = e2i(a, MEMORY / AES_BLOCK_SIZE);
-        copy_block(c, &long_state[j * AES_BLOCK_SIZE]);
-        aesb_single_round(c, c, a);
-        xor_blocks(b, c);
-        swap_blocks(b, c);
-        copy_block(&long_state[j * AES_BLOCK_SIZE], c);
-        assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE));
-        swap_blocks(a, b);
-        VARIANT1_1(&long_state[j * AES_BLOCK_SIZE]);
+        j = e2i(a, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
+        copy_block(c1, &long_state[j]);
+        aesb_single_round(c1, c1, a);
+        copy_block(&long_state[j], c1);
+        xor_blocks(&long_state[j], b);
+        assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE);
+        VARIANT1_1(&long_state[j]);
 
-        j = e2i(a, MEMORY / AES_BLOCK_SIZE);
-        copy_block(c, &long_state[j * AES_BLOCK_SIZE]);
-        mul(a, c, d);
-        sum_half_blocks(b, d);
-        swap_blocks(b, c);
-        xor_blocks(b, c);
-        VARIANT1_2(c + 8);
-        copy_block(&long_state[j * AES_BLOCK_SIZE], c);
-        assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE));
+        j = e2i(c1, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
+        copy_block(c2, &long_state[j]);
+        mul(c1, c2, d);
+        swap_blocks(a, c1);
+        sum_half_blocks(c1, d);
+        swap_blocks(c1, c2);
+        xor_blocks(c1, c2);
+        VARIANT1_2(c2 + 8);
+        copy_block(&long_state[j], c2);
+        assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE);
         copy_block(b + AES_BLOCK_SIZE, b);
-        swap_blocks(a, b);
+        copy_block(b, a);
+        copy_block(a, c1);
     }
   }
   else
@@ -1722,94 +1776,93 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
         r2[4] ^= r2[5];
         r2[5] ^= r2[0];
 
-        j = e2i(a, MEMORY / AES_BLOCK_SIZE);
-        copy_block(c, &long_state[j * AES_BLOCK_SIZE]);
-        aesb_single_round(c, c, a);
-        xor_blocks(b, c);
-        swap_blocks(b, c);
-        copy_block(&long_state[j * AES_BLOCK_SIZE], c);
-        assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE));
-        swap_blocks(a, b);
-        VARIANT1_1(&long_state[j * AES_BLOCK_SIZE]);
+        j = e2i(a, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
+        copy_block(c1, &long_state[j]);
+        aesb_single_round(c1, c1, a);
+        copy_block(&long_state[j], c1);
+        xor_blocks(&long_state[j], b);
+        assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE);
+        VARIANT1_1(&long_state[j]);
 
-        j = e2i(a, MEMORY / AES_BLOCK_SIZE);
-        copy_block(c, &long_state[j * AES_BLOCK_SIZE]);
-        mul(a, c, d);
-        if (r2[0] % 2)
-            VARIANT2_2_PORTABLE();
+        j = e2i(c1, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
+        copy_block(c2, &long_state[j]);
+        mul(c1, c2, d);
         if (r2[1] % 2)
+            VARIANT2_2_PORTABLE();
+        if (r2[0] % 2)
             VARIANT2_PORTABLE_SHUFFLE_ADD(long_state, j);
-        sum_half_blocks(b, d);
-        swap_blocks(b, c);
-        xor_blocks(b, c);
-        VARIANT1_2(c + 8);
-        copy_block(&long_state[j * AES_BLOCK_SIZE], c);
-        assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE));
+        swap_blocks(a, c1);
+        sum_half_blocks(c1, d);
+        swap_blocks(c1, c2);
+        xor_blocks(c1, c2);
+        VARIANT1_2(c2 + 8);
+        copy_block(&long_state[j], c2);
+        assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE);
         copy_block(b + AES_BLOCK_SIZE, b);
-        swap_blocks(a, b);
+        copy_block(b, a);
+        copy_block(a, c1);
 
         r2[0] ^= (r2[1] ^ (k * l));
         r2[1] ^= (r2[0] ^ (k + m));
 
         for(l = 1; l < yy; l++)
         {
-            j = e2i(a, MEMORY / AES_BLOCK_SIZE);
-            copy_block(c, &long_state[j * AES_BLOCK_SIZE]);
-            aesb_single_round(c, c, a);
-            xor_blocks(b, c);
-            swap_blocks(b, c);
-            copy_block(&long_state[j * AES_BLOCK_SIZE], c);
-            assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE));
-            swap_blocks(a, b);
-            VARIANT1_1(&long_state[j * AES_BLOCK_SIZE]);
+            j = e2i(a, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
+            copy_block(c1, &long_state[j]);
+            aesb_single_round(c1, c1, a);
+            copy_block(&long_state[j], c1);
+            xor_blocks(&long_state[j], b);
+            assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE);
+            VARIANT1_1(&long_state[j]);
 
-            j = e2i(a, MEMORY / AES_BLOCK_SIZE);
-            copy_block(c, &long_state[j * AES_BLOCK_SIZE]);
-            mul(a, c, d);
-            if (r2[2] % 2)
-                VARIANT2_2_PORTABLE();
+            j = e2i(c1, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
+            copy_block(c2, &long_state[j]);
+            mul(c1, c2, d);
             if (r2[3] % 2)
+                VARIANT2_2_PORTABLE();
+            if (r2[2] % 2)
                 VARIANT2_PORTABLE_SHUFFLE_ADD(long_state, j);
-            sum_half_blocks(b, d);
-            swap_blocks(b, c);
-            xor_blocks(b, c);
-            VARIANT1_2(c + 8);
-            copy_block(&long_state[j * AES_BLOCK_SIZE], c);
-            assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE));
+            swap_blocks(a, c1);
+            sum_half_blocks(c1, d);
+            swap_blocks(c1, c2);
+            xor_blocks(c1, c2);
+            VARIANT1_2(c2 + 8);
+            copy_block(&long_state[j], c2);
+            assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE);
             copy_block(b + AES_BLOCK_SIZE, b);
-            swap_blocks(a, b);
+            copy_block(b, a);
+            copy_block(a, c1);
 
             r2[2] ^= (r2[3] ^ (l - m));
             r2[3] ^= (r2[2] ^ (l - k));
 
             for(m = 1; m < zz; m++)
             {
-                j = e2i(a, MEMORY / AES_BLOCK_SIZE);
-                copy_block(c, &long_state[j * AES_BLOCK_SIZE]);
-                aesb_single_round(c, c, a);
-                xor_blocks(b, c);
-                swap_blocks(b, c);
-                copy_block(&long_state[j * AES_BLOCK_SIZE], c);
-                assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE));
-                swap_blocks(a, b);
-                VARIANT1_1(&long_state[j * AES_BLOCK_SIZE]);
+                j = e2i(a, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
+                copy_block(c1, &long_state[j]);
+                aesb_single_round(c1, c1, a);
+                copy_block(&long_state[j], c1);
+                xor_blocks(&long_state[j], b);
+                assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE);
+                VARIANT1_1(&long_state[j]);
 
-                j = e2i(a, MEMORY / AES_BLOCK_SIZE);
-                copy_block(c, &long_state[j * AES_BLOCK_SIZE]);
-                mul(a, c, d);
-                if (r2[4] % 2)
-                    VARIANT2_2_PORTABLE();
+                j = e2i(c1, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
+                copy_block(c2, &long_state[j]);
+                mul(c1, c2, d);
                 if (r2[5] % 2)
+                    VARIANT2_2_PORTABLE();
+                if (r2[4] % 2)
                     VARIANT2_PORTABLE_SHUFFLE_ADD(long_state, j);
-                sum_half_blocks(b, d);
-                swap_blocks(b, c);
-                xor_blocks(b, c);
-                VARIANT1_2(c + 8);
-                copy_block(&long_state[j * AES_BLOCK_SIZE], c);
-                assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE));
+                swap_blocks(a, c1);
+                sum_half_blocks(c1, d);
+                swap_blocks(c1, c2);
+                xor_blocks(c1, c2);
+                VARIANT1_2(c2 + 8);
+                copy_block(&long_state[j], c2);
+                assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE);
                 copy_block(b + AES_BLOCK_SIZE, b);
-                swap_blocks(a, b);
-                
+                copy_block(b, a);
+                copy_block(a, c1);
 
                 r2[4] ^= (r2[5] ^ (m * k));
                 r2[5] ^= (r2[4] ^ (m + l));
@@ -1820,27 +1873,27 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
 
   for (i = 0; i < rand_iters; i++)
   {
-    j = e2i(a, MEMORY / AES_BLOCK_SIZE);
-    copy_block(c, &long_state[j * AES_BLOCK_SIZE]);
-    aesb_single_round(c, c, a);
-    xor_blocks(b, c);
-    swap_blocks(b, c);
-    copy_block(&long_state[j * AES_BLOCK_SIZE], c);
-    assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE));
-    swap_blocks(a, b);
-    VARIANT1_1(&long_state[j * AES_BLOCK_SIZE]);
+    j = e2i(a, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
+    copy_block(c1, &long_state[j]);
+    aesb_single_round(c1, c1, a);
+    copy_block(&long_state[j], c1);
+    xor_blocks(&long_state[j], b);
+    assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE);
+    VARIANT1_1(&long_state[j]);
 
-    j = e2i(a, MEMORY / AES_BLOCK_SIZE);
-    copy_block(c, &long_state[j * AES_BLOCK_SIZE]);
-    mul(a, c, d);
-    sum_half_blocks(b, d);
-    swap_blocks(b, c);
-    xor_blocks(b, c);
-    VARIANT1_2(c + 8);
-    copy_block(&long_state[j * AES_BLOCK_SIZE], c);
-    assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE));
+    j = e2i(c1, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
+    copy_block(c2, &long_state[j]);
+    mul(c1, c2, d);
+    swap_blocks(a, c1);
+    sum_half_blocks(c1, d);
+    swap_blocks(c1, c2);
+    xor_blocks(c1, c2);
+    VARIANT1_2(c2 + 8);
+    copy_block(&long_state[j], c2);
+    assert(j == e2i(a, MEMORY / AES_BLOCK_SIZE) * AES_BLOCK_SIZE);
     copy_block(b + AES_BLOCK_SIZE, b);
-    swap_blocks(a, b);
+    copy_block(b, a);
+    copy_block(a, c1);
   }
 
   memcpy(text, state.init, init_size_byte);
