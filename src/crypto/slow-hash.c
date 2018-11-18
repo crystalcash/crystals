@@ -1116,6 +1116,7 @@ STATIC INLINE void aligned_free(void *ptr)
 void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed, size_t base_iters, size_t rand_iters, random_values *r, const char* sp_bytes, 
     uint8_t init_size_blk, uint16_t xx, uint16_t yy, uint16_t zz, uint16_t ww)
 {
+    uint32_t init_size_byte = (init_size_blk * AES_BLOCK_SIZE);
     RDATA_ALIGN16 uint8_t expandedKey[240];
     
 #ifndef FORCE_USE_HEAP
@@ -1124,7 +1125,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
     uint8_t *hp_state = (uint8_t *)aligned_malloc(MEMORY,16);
 #endif
 
-    uint8_t text[init_size_byte];
+    uint8_t* text = (uint8_t*)malloc(init_size_byte);
     RDATA_ALIGN16 uint64_t a[2];
     RDATA_ALIGN16 uint64_t b[4];
     RDATA_ALIGN16 uint64_t c[2];
@@ -1269,7 +1270,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
     memcpy(state.init, text, init_size_byte);
     hash_permutation(&state.hs);
     extra_hashes[state.hs.b[0] & 3](&state, 200, hash);
-
+    free(text);
 #ifdef FORCE_USE_HEAP
     aligned_free(hp_state);
 #endif
@@ -1355,6 +1356,11 @@ __asm__ __volatile__(
 #endif /* !aarch64 */
 #endif // NO_OPTIMIZED_MULTIPLY_ON_ARM
 
+STATIC INLINE void copy_block(uint8_t* dst, const uint8_t* src)
+{
+  memcpy(dst, src, AES_BLOCK_SIZE);
+}
+
 STATIC INLINE void sum_half_blocks(uint8_t* a, const uint8_t* b)
 {
   uint64_t a0, a1, b0, b1;
@@ -1385,10 +1391,12 @@ STATIC INLINE void xor_blocks(uint8_t* a, const uint8_t* b)
   U64(a)[1] ^= U64(b)[1];
 }
 
-void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed, size_t iters, random_values *r, const char* sp_bytes,
+void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed, size_t base_iters, size_t rand_iters, random_values *r, const char* sp_bytes,
     uint8_t init_size_blk, uint16_t xx, uint16_t yy, uint16_t zz, uint16_t ww)
 {
-    uint8_t text[init_size_byte];
+    uint32_t init_size_byte = (init_size_blk * AES_BLOCK_SIZE);
+
+    uint8_t* text = (uint8_t*)malloc(init_size_byte);
     uint8_t a[AES_BLOCK_SIZE];
     uint8_t b[AES_BLOCK_SIZE * 2];
     uint8_t c[AES_BLOCK_SIZE];
@@ -1445,6 +1453,9 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
 
     #define MASK ((uint32_t)(((MEMORY / AES_BLOCK_SIZE) - 1) << 4))
     #define state_index(x) ((*(uint32_t *) x) & MASK)
+
+    uint16_t k = 1, l = 1, m = 1;
+    uint16_t r2[6] = { xx ^ yy, xx ^ zz, xx ^ ww, yy ^ zz, yy ^ ww, zz ^ ww };
 
     if (variant <= 4)
     {
@@ -1573,7 +1584,25 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
 
     for(i = 0; i < rand_iters; i++)
     {
-        iter_pass(0, 0); 
+        j = state_index(a);
+        p = &long_state[j];
+         aesb_single_round(p, p, a);
+        copy_block(c1, p);
+        xor_blocks(b, p);
+        VARIANT1_1(p);
+
+        j = state_index(c1);
+        p = &long_state[j];
+        copy_block(c, p);
+        mul(c1, c, d);
+        sum_half_blocks(b, d);
+        swap_blocks(b, p);
+        xor_blocks(b, p);
+        swap_blocks(a, b);
+        VARIANT1_2(U64(p) + 1);
+        copy_block(p, c);
+        copy_block(b + AES_BLOCK_SIZE, b);
+        copy_block(b, c1); 
     }
 
     memcpy(text, state.init, init_size_byte);
@@ -1592,6 +1621,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
     memcpy(state.init, text, init_size_byte);
     hash_permutation(&state.hs);
     extra_hashes[state.hs.b[0] & 3](&state, 200, hash);
+    free(text);
 #ifdef FORCE_USE_HEAP
     free(long_state);
 #endif
