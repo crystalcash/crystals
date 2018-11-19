@@ -46,8 +46,8 @@
 #define MEMORY         (1024 * 256) // 256kb scratchpad
 #define AES_BLOCK_SIZE  16
 #define AES_KEY_SIZE    32
-extern int aesb_single_round(const uint8_t *in, uint8_t*out, const uint8_t *expandedKey);
-extern int aesb_pseudo_round(const uint8_t *in, uint8_t *out, const uint8_t *expandedKey);
+extern void aesb_single_round(const uint8_t *in, uint8_t *out, const uint8_t *expandedKey);
+extern void aesb_pseudo_round(const uint8_t *in, uint8_t *out, const uint8_t *expandedKey);
 
 #define VARIANT1_1(p) \
   do if (variant > 0) \
@@ -691,7 +691,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
     if(useAes)
     {
         aes_expand_key(state.hs.b, expandedKey);
-        for(i = 0; i < (MEMORY / init_size_byte); i++)
+        for(i = 0; i < MEMORY / init_size_byte; i++)
         {
             aes_pseudo_round(text, text, expandedKey, init_size_blk);
             memcpy(&hp_state[i * init_size_byte], text, init_size_byte);
@@ -944,8 +944,7 @@ union cn_slow_hash_state
 
 #define post_aes(sh, v22) \
   vst1q_u8((uint8_t *)c, _c); \
-  _b = veorq_u8(_b, _c); \
-  vst1q_u8(&hp_state[j], _b); \
+  vst1q_u8(&hp_state[j], veorq_u8(_b, _c)); \
   VARIANT1_1(&hp_state[j]); \
   j = state_index(c); \
   p = U64(&hp_state[j]); \
@@ -962,6 +961,7 @@ union cn_slow_hash_state
   VARIANT1_2(p + 1); \
   _b1 = _b; \
   _b = _c; \
+
 
 /* Note: this was based on a standard 256bit key schedule but
  * it's been shortened since Cryptonight doesn't use the full
@@ -1465,7 +1465,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
             p = &long_state[j];
             aesb_single_round(p, p, a);
             copy_block(c1, p);
-            xor_blocks(b, p);
+            xor_blocks(p, b);
             VARIANT1_1(p);
 
             j = state_index(c1);
@@ -1496,7 +1496,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
             p = &long_state[j];
             aesb_single_round(p, p, a);
             copy_block(c1, p);
-            xor_blocks(b, p);
+            xor_blocks(p, b);
             VARIANT1_1(p);
 
             j = state_index(c1);
@@ -1524,7 +1524,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
                 p = &long_state[j];
                 aesb_single_round(p, p, a);
                 copy_block(c1, p);
-                xor_blocks(b, p);
+                xor_blocks(p, b);
                 VARIANT1_1(p);
 
                 j = state_index(c1);
@@ -1552,7 +1552,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
                     p = &long_state[j];
                     aesb_single_round(p, p, a);
                     copy_block(c1, p);
-                    xor_blocks(b, p);
+                    xor_blocks(p, b);
                     VARIANT1_1(p);
 
                     j = state_index(c1);
@@ -1584,7 +1584,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
         p = &long_state[j];
         aesb_single_round(p, p, a);
         copy_block(c1, p);
-        xor_blocks(b, p);
+        xor_blocks(p, b);
         VARIANT1_1(p);
 
         j = state_index(c1);
@@ -1641,9 +1641,6 @@ void slow_hash_free_state(void)
 static void (*const extra_hashes[4])(const void *, size_t, char *) = {
   hash_extra_blake, hash_extra_groestl, hash_extra_jh, hash_extra_skein
 };
-
-extern int aesb_single_round(const uint8_t *in, uint8_t*out, const uint8_t *expandedKey);
-extern int aesb_pseudo_round(const uint8_t *in, uint8_t *out, const uint8_t *expandedKey);
 
 static size_t e2i(const uint8_t* a, size_t count) { return (*((uint64_t*)a) / AES_BLOCK_SIZE) & (count - 1); }
 
@@ -1755,9 +1752,9 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
 
   randomize_scratchpad(r, sp_bytes, long_state, variant);
 
-  for (i = 0; i < 16; i++) {
-    a[i] = state.k[     i] ^ state.k[32 + i];
-    b[i] = state.k[16 + i] ^ state.k[48 + i];
+  for (i = 0; i < AES_BLOCK_SIZE; i++) {
+    a[i] = state.k[     i] ^ state.k[AES_BLOCK_SIZE * 2 + i];
+    b[i] = state.k[AES_BLOCK_SIZE + i] ^ state.k[AES_BLOCK_SIZE * 3 + i];
   }
 
   uint16_t k = 1, l = 1, m = 1;
