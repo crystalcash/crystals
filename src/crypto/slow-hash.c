@@ -1472,14 +1472,13 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
             p = &long_state[j];
             copy_block(c, p);
             mul(c1, c, d);
-            sum_half_blocks(b, d);
-            swap_blocks(b, p);
-            xor_blocks(b, p);
-            swap_blocks(a, b);
-            VARIANT1_2(U64(p) + 1);
+            sum_half_blocks(a, d);
+            swap_blocks(a, c);
+            xor_blocks(a, c);
+            VARIANT1_2(U64(c) + 1);
             copy_block(p, c);
             copy_block(b + AES_BLOCK_SIZE, b);
-            copy_block(b, c1); 
+            copy_block(b, c1);
         }
     }
     else
@@ -1508,14 +1507,13 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
                 VARIANT2_2_PORTABLE();
             if (r2[0] % 2)
                 VARIANT2_PORTABLE_SHUFFLE_ADD(long_state, j);
-            sum_half_blocks(b, d);
-            swap_blocks(b, p);
-            xor_blocks(b, p);
-            swap_blocks(a, b);
-            VARIANT1_2(U64(p) + 1);
+            sum_half_blocks(a, d);
+            swap_blocks(a, c);
+            xor_blocks(a, c);
+            VARIANT1_2(U64(c) + 1);
             copy_block(p, c);
             copy_block(b + AES_BLOCK_SIZE, b);
-            copy_block(b, c1); 
+            copy_block(b, c1);
 
             r2[0] ^= (r2[1] ^ (k * l));
             r2[1] ^= (r2[0] ^ (k + m));
@@ -1537,14 +1535,13 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
                     VARIANT2_2_PORTABLE();
                 if (r2[2] % 2)
                     VARIANT2_PORTABLE_SHUFFLE_ADD(long_state, j);
-                sum_half_blocks(b, d);
-                swap_blocks(b, p);
-                xor_blocks(b, p);
-                swap_blocks(a, b);
-                VARIANT1_2(U64(p) + 1);
+                sum_half_blocks(a, d);
+                swap_blocks(a, c);
+                xor_blocks(a, c);
+                VARIANT1_2(U64(c) + 1);
                 copy_block(p, c);
                 copy_block(b + AES_BLOCK_SIZE, b);
-                copy_block(b, c1); 
+                copy_block(b, c1);
 
                 r2[2] ^= (r2[3] ^ (l - m));
                 r2[3] ^= (r2[2] ^ (l - k));
@@ -1566,14 +1563,13 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
                         VARIANT2_2_PORTABLE();
                     if (r2[4] % 2)
                         VARIANT2_PORTABLE_SHUFFLE_ADD(long_state, j);
-                    sum_half_blocks(b, d);
-                    swap_blocks(b, p);
-                    xor_blocks(b, p);
-                    swap_blocks(a, b);
-                    VARIANT1_2(U64(p) + 1);
+                    sum_half_blocks(a, d);
+                    swap_blocks(a, c);
+                    xor_blocks(a, c);
+                    VARIANT1_2(U64(c) + 1);
                     copy_block(p, c);
                     copy_block(b + AES_BLOCK_SIZE, b);
-                    copy_block(b, c1); 
+                    copy_block(b, c1);
 
                     r2[4] ^= (r2[5] ^ (m * k));
                     r2[5] ^= (r2[4] ^ (m + l));
@@ -1586,7 +1582,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
     {
         j = state_index(a);
         p = &long_state[j];
-         aesb_single_round(p, p, a);
+        aesb_single_round(p, p, a);
         copy_block(c1, p);
         xor_blocks(b, p);
         VARIANT1_1(p);
@@ -1595,14 +1591,13 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
         p = &long_state[j];
         copy_block(c, p);
         mul(c1, c, d);
-        sum_half_blocks(b, d);
-        swap_blocks(b, p);
-        xor_blocks(b, p);
-        swap_blocks(a, b);
-        VARIANT1_2(U64(p) + 1);
+        sum_half_blocks(a, d);
+        swap_blocks(a, c);
+        xor_blocks(a, c);
+        VARIANT1_2(U64(c) + 1);
         copy_block(p, c);
         copy_block(b + AES_BLOCK_SIZE, b);
-        copy_block(b, c1); 
+        copy_block(b, c1);
     }
 
     memcpy(text, state.init, init_size_byte);
